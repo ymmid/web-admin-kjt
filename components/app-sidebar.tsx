@@ -41,28 +41,28 @@ const data = {
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "#",
+      title: "Buat Surat Jalan",
+      url: "/dashboard/create-work-permit",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
+      title: "Data Pembelian & Penjualan Barang",
       url: "#",
       icon: IconListDetails,
     },
     {
-      title: "Analytics",
+      title: "Data Uang Masuk & Keluar",
       url: "#",
       icon: IconChartBar,
     },
     {
-      title: "Projects",
+      title: "Data List Pekerjaan",
       url: "#",
       icon: IconFolder,
     },
     {
-      title: "Team",
-      url: "#",
+      title: "Data Karyawan ",
+      url: "/dashboard/employees-data",
       icon: IconUsers,
     },
   ],
