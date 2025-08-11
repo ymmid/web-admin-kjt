@@ -1,0 +1,32 @@
+CV. [NAMA PERUSAHAAN ANDA]
+Jl. [Alamat Lengkap]
+Telp: [No. Telepon] | Email: [Email Perusahaan]
+
+==================================================================
+                        SURAT JALAN TUGAS
+                       No: {{document_number}}
+==================================================================
+Yang bertanda tangan di bawah ini:
+
+Nama        : {{sender_name}}  
+Jabatan     : {{sender_position}}  
+
+Dengan ini menugaskan kepada:
+
+Nama Tim    : {{team_name}}  
+Personel    :
+{{#personels}}
+  - {{name}} ({{role}})
+{{/personels}}
+
+Untuk melaksanakan pekerjaan sebagai berikut:
+
+Jenis Pekerjaan : {{job_description}}  
+Lokasi Kerja    : {{job_location}}  
+Tanggal Berangkat: {{departure_date}}  
+Perkiraan Selesai: {{return_date}}
+
+Catatan:
+{{notes}}
+
+Demikian surat jalan ini dibuat agar dapat digunakan sebagaimana mestinya.
