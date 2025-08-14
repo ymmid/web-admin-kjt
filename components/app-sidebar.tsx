@@ -46,23 +46,23 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Data Pembelian & Penjualan Barang",
-      url: "#",
+      title: "Pembelian & Penjualan Barang",
+      url: "/dashboard/inventory-tracking",
       icon: IconListDetails,
     },
     {
-      title: "Data Uang Masuk & Keluar",
-      url: "#",
+      title: "Uang Masuk & Keluar",
+      url: "/dashboard/money-tracking",
       icon: IconChartBar,
     },
     {
-      title: "Data List Pekerjaan",
-      url: "#",
+      title: "List Pekerjaan",
+      url: "job-list",
       icon: IconFolder,
     },
     {
       title: "Data Karyawan ",
-      url: "/dashboard/employees-data",
+      url: "/dashboard/employees",
       icon: IconUsers,
     },
   ],
@@ -177,7 +177,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />
-        tes
       </SidebarFooter>
     </Sidebar>
   );

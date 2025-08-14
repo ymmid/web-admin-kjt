@@ -1,177 +1,150 @@
 "use client";
-
-import { useState, ChangeEvent } from "react";
-import { Button } from "@/components/ui/button";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { FiSearch } from "react-icons/fi";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { saveAs } from "file-saver";
+import { Button } from "@/components/ui/button";
+const invoices = [
+  {
+    invoice: "INV001",
+    paymentStatus: "Paid",
+    totalAmount: "$250.00",
+    paymentMethod: "Credit Card",
+  },
+  {
+    invoice: "INV002",
+    paymentStatus: "Pending",
+    totalAmount: "$150.00",
+    paymentMethod: "PayPal",
+  },
+  {
+    invoice: "INV003",
+    paymentStatus: "Unpaid",
+    totalAmount: "$350.00",
+    paymentMethod: "Bank Transfer",
+  },
+  {
+    invoice: "INV004",
+    paymentStatus: "Paid",
+    totalAmount: "$450.00",
+    paymentMethod: "Credit Card",
+  },
+  {
+    invoice: "INV005",
+    paymentStatus: "Paid",
+    totalAmount: "$550.00",
+    paymentMethod: "PayPal",
+  },
+  {
+    invoice: "INV006",
+    paymentStatus: "Pending",
+    totalAmount: "$200.00",
+    paymentMethod: "Bank Transfer",
+  },
+  {
+    invoice: "INV007",
+    paymentStatus: "Unpaid",
+    totalAmount: "$300.00",
+    paymentMethod: "Credit Card",
+  },
+];
 
-interface FormData {
-  documentNumber: string;
-  senderName: string;
-  senderPosition: string;
-  teamName: string;
-  personels: string;
-  jobDescription: string;
-  jobLocation: string;
-  departureDate: string;
-  returnDate: string;
-  notes: string;
-}
-
-export default function CreateWorkPermitPage() {
-  const [formData, setFormData] = useState<FormData>({
-    documentNumber: "",
-    senderName: "",
-    senderPosition: "",
-    teamName: "",
-    personels: "",
-    jobDescription: "",
-    jobLocation: "",
-    departureDate: "",
-    returnDate: "",
-    notes: "",
-  });
-
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const isFormComplete = Object.values(formData).every(
-    (val) => val.trim() !== "",
-  );
-
-  const generateDocx = async () => {
-    const res = await fetch("/api/generate-work-permit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-
-    if (!res.ok) {
-      alert("Gagal generate surat.");
-      return;
-    }
-
-    const blob = await res.blob();
-    saveAs(blob, `Surat-Jalan-${formData.documentNumber || "Tugas"}.docx`);
-  };
-
+export default function InventoryTracking() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-4xl h-full shadow-lg border">
-        <CardHeader>
-          <h1 className="text-2xl font-bold text-center">
-            📄 Buat Surat Jalan Tugas
-          </h1>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block mb-1 font-medium">Nomor Surat</label>
-              <Input
-                name="documentNumber"
-                placeholder="Contoh: 001/SJ/08/2025"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">
-                Nama Penanggung Jawab
-              </label>
-              <Input
-                name="senderName"
-                placeholder="Contoh: Budi Santoso"
-                onChange={handleChange}
-              />
-            </div>
+    <div className="p-5 ">
+      <h1 className="text-2xl font-bold">
+        Data Pembelian Dan Penjualan Barang
+      </h1>
+      <div className="flex gap-3 mt-5">
+        <Input type="search" placeholder="Search..." className="" />{" "}
+        <Button>
+          <FiSearch size={20} />
+        </Button>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Fruits</SelectLabel>
+              <SelectItem value="apple">Apple</SelectItem>
+              <SelectItem value="banana">Banana</SelectItem>
+              <SelectItem value="blueberry">Blueberry</SelectItem>
+              <SelectItem value="grapes">Grapes</SelectItem>
+              <SelectItem value="pineapple">Pineapple</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+      <Card className="p-5 mt-5">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">No Transaksi</TableHead>
+              <TableHead>Nama</TableHead>
+              <TableHead>Tangaal Pembelian</TableHead>
+              <TableHead> Tanggal Penjualan </TableHead>
+              <TableHead className="text-right">Rencana Penggunaan</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {invoices.map((invoice) => (
+              <TableRow key={invoice.invoice}>
+                <TableCell className="font-medium">{invoice.invoice}</TableCell>
+                <TableCell>{invoice.paymentStatus}</TableCell>
+                <TableCell>{invoice.paymentMethod}</TableCell>
+                <TableCell>{invoice.totalAmount}</TableCell>
+                <TableCell className="text-right">
+                  {invoice.totalAmount}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
-            <div>
-              <label className="block mb-1 font-medium">Jabatan</label>
-              <Input
-                name="senderPosition"
-                placeholder="Contoh: Supervisor Lapangan"
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Nama Tim</label>
-              <Input
-                name="teamName"
-                placeholder="Contoh: Tim Maintenance Mesin"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block mb-1 font-medium">
-                Personel (pisahkan dengan koma)
-              </label>
-              <Textarea
-                name="personels"
-                placeholder="Contoh: Joko, Sari, Andi"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block mb-1 font-medium">Jenis Pekerjaan</label>
-              <Textarea
-                name="jobDescription"
-                placeholder="Contoh: Perbaikan wiring panel utama di area produksi"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block mb-1 font-medium">Lokasi Kerja</label>
-              <Input
-                name="jobLocation"
-                placeholder="Contoh: PT Karya Jaya Teknik, Cikarang"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div>
-              <label className="block mb-1 font-medium">
-                Tanggal Berangkat
-              </label>
-              <Input type="date" name="departureDate" onChange={handleChange} />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Tanggal Kembali</label>
-              <Input type="date" name="returnDate" onChange={handleChange} />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block mb-1 font-medium">Catatan Tambahan</label>
-              <Textarea
-                name="notes"
-                placeholder="Contoh: Membawa tools sendiri"
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <Button
-              onClick={generateDocx}
-              disabled={!isFormComplete}
-              className="px-6 py-3 text-base font-semibold"
-            >
-              🡇 Download Surat Jalan
-            </Button>
-            {!isFormComplete && (
-              <p className="text-sm text-red-500 mt-2">
-                * Harap lengkapi semua data terlebih dahulu
-              </p>
-            )}
-          </div>
-        </CardContent>
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious href="#" />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationLink href="#">1</PaginationLink>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationEllipsis />
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext href="#" />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </Card>
     </div>
   );
