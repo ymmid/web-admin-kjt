@@ -57,7 +57,7 @@ const data = {
     },
     {
       title: "List Pekerjaan",
-      url: "job-list",
+      url: "/dashboard/job-list",
       icon: IconFolder,
     },
     {
@@ -133,8 +133,8 @@ const data = {
   ],
   documents: [
     {
-      name: "Data Pekerjaan Harian",
-      url: "#",
+      name: "Pekerjaan Harian",
+      url: "/dashboard/daily-job",
       icon: IconDatabase,
     },
     {

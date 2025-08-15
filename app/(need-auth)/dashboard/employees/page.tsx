@@ -9,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FiSearch } from "react-icons/fi";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -16,7 +18,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+
 import {
   useReactTable,
   getCoreRowModel,
@@ -25,7 +27,15 @@ import {
 } from "@tanstack/react-table";
 import { useMemo } from "react";
 import { IconDotsVertical } from "@tabler/icons-react";
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 type Employee = {
   id: string;
   name: string;
@@ -116,8 +126,7 @@ export default function EmployeeTabs() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-32">
                 <DropdownMenuItem>Edit</DropdownMenuItem>
-                <DropdownMenuItem>Make a copy</DropdownMenuItem>
-                <DropdownMenuItem>Favorite</DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-500">
                   Delete
@@ -138,14 +147,11 @@ export default function EmployeeTabs() {
   });
 
   return (
-    <Tabs defaultValue="employees" className="w-full flex-col gap-4 mt-5 ">
-      <div className="flex items-center justify-between px-4 lg:px-6">
-        <TabsList>
-          <TabsTrigger value="employees">Data Karyawan</TabsTrigger>
-          <TabsTrigger value="lainnya">Lainnya</TabsTrigger>
-        </TabsList>
+    <Tabs defaultValue="employees" className="w-full flex-col gap-4 mt-5  ">
+      <h1 className="text-2xl px-5 font-bold">Data Karyawan</h1>
+      <div className="flex justify-end px-5">
+        <Button>+ Tambah Karyawan</Button>
       </div>
-
       <TabsContent
         value="employees"
         className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"

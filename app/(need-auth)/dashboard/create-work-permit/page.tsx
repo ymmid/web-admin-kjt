@@ -6,7 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { saveAs } from "file-saver";
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 interface FormData {
   documentNumber: string;
   senderName: string;
@@ -62,13 +70,29 @@ export default function CreateWorkPermitPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-4xl h-full shadow-lg border">
-        <CardHeader>
-          <h1 className="text-2xl font-bold text-center">
-            📄 Buat Surat Jalan Tugas
-          </h1>
-        </CardHeader>
+    <div className="min-h-screen  px-4 py-8">
+      <div className="flex justify-between">
+        <h1 className="text-2xl font-bold">
+          Buat Surat Jalan Tugas/Invoice/Bast
+        </h1>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Pilih Jenis Surat" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Pilih Jenis Surat</SelectLabel>
+              <SelectItem value="apple">Apple</SelectItem>
+              <SelectItem value="banana">Banana</SelectItem>
+              <SelectItem value="blueberry">Blueberry</SelectItem>
+              <SelectItem value="grapes">Grapes</SelectItem>
+              <SelectItem value="pineapple">Pineapple</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </div>
+      <Card className="w-full  mt-5 h-full shadow-lg border">
+        <CardHeader></CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

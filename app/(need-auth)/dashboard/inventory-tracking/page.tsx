@@ -8,6 +8,14 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { IconDotsVertical } from "@tabler/icons-react";
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -76,14 +84,14 @@ const invoices = [
   },
 ];
 
-export default function InventoryTracking() {
+export default function InventoryTrackingPage() {
   return (
     <div className="p-5 ">
       <h1 className="text-2xl font-bold">
         Data Pembelian Dan Penjualan Barang
       </h1>
       <div className="flex gap-3 mt-5">
-        <Input type="search" placeholder="Search..." className="" />{" "}
+        <Input type="search" placeholder="Search..." className="" />
         <Button>
           <FiSearch size={20} />
         </Button>
@@ -102,16 +110,40 @@ export default function InventoryTracking() {
             </SelectGroup>
           </SelectContent>
         </Select>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Fruits</SelectLabel>
+              <SelectItem value="apple">Apple</SelectItem>
+              <SelectItem value="banana">Banana</SelectItem>
+              <SelectItem value="blueberry">Blueberry</SelectItem>
+              <SelectItem value="grapes">Grapes</SelectItem>
+              <SelectItem value="pineapple">Pineapple</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Button>Apply Filter</Button>
       </div>
-      <Card className="p-5 mt-5">
+      <Card className="p-5  mt-5">
+        <div className="gap-5 flex justify-end">
+          <Button className=" ">Export To Exel</Button>
+          <Button variant="outline" className="">
+            + Tambah Transksi
+          </Button>
+        </div>
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted">
             <TableRow>
               <TableHead className="w-[100px]">No Transaksi</TableHead>
               <TableHead>Nama</TableHead>
               <TableHead>Tangaal Pembelian</TableHead>
               <TableHead> Tanggal Penjualan </TableHead>
-              <TableHead className="text-right">Rencana Penggunaan</TableHead>
+              <TableHead>Rencana Penggunaan</TableHead>
+              <TableHead className="text-right">Nominal</TableHead>
+              <TableHead className="text-right"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -121,14 +153,36 @@ export default function InventoryTracking() {
                 <TableCell>{invoice.paymentStatus}</TableCell>
                 <TableCell>{invoice.paymentMethod}</TableCell>
                 <TableCell>{invoice.totalAmount}</TableCell>
+                <TableCell>{invoice.totalAmount}</TableCell>
                 <TableCell className="text-right">
                   {invoice.totalAmount}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                        size="icon"
+                      >
+                        <IconDotsVertical />
+                        <span className="sr-only">Open menu</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuItem>Edit</DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-red-500">
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-
         <Pagination>
           <PaginationContent>
             <PaginationItem>
