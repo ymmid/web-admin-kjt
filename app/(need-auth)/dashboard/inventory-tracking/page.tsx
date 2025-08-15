@@ -29,9 +29,7 @@ import { FiSearch } from "react-icons/fi";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
