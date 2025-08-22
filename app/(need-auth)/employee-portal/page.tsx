@@ -20,13 +20,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { CheckCircle2, Lock, LogIn, LogOut, Plus, Timer } from "lucide-react";
 
 function fmtDateHeader(d: Date) {
@@ -322,41 +316,11 @@ export default function PortalPage() {
                 </DialogHeader>
                 <div className="grid gap-4">
                   <div className="grid gap-2">
-                    <Label>Kategori</Label>
-                    <Select
-                      value={actCategory}
-                      onValueChange={(v) =>
-                        setActCategory(v as ActivityCategory)
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Pilih kategori" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {CATEGORY_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid gap-2">
                     <Label>Deskripsi</Label>
                     <Textarea
                       value={actDesc}
                       onChange={(e) => setActDesc(e.target.value)}
                       placeholder="Tuliskan deskripsi singkat pekerjaan..."
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Qty (opsional)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={actQty}
-                      onChange={(e) => setActQty(e.target.value)}
-                      placeholder="0"
                     />
                   </div>
                 </div>
@@ -441,10 +405,7 @@ export default function PortalPage() {
               <Card key={a.id} className="p-3">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary">
-                      {CATEGORY_OPTIONS.find((c) => c.value === a.category)
-                        ?.label ?? a.category}
-                    </Badge>
+                    <Badge variant="secondary">Pekerjaan harian</Badge>
                     <span className="text-xs text-muted-foreground">
                       dibuat{" "}
                       {new Date(a.createdAt).toLocaleTimeString("id-ID", {
@@ -454,10 +415,6 @@ export default function PortalPage() {
                     </span>
                   </div>
                   <div className="text-sm">{a.description}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {a.qty != null ? <>Qty: {a.qty} • </> : null}
-                    Lampiran: {a.attachments ?? 0}
-                  </div>
                 </div>
               </Card>
             ))}

@@ -7,6 +7,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +30,7 @@ type Status =
   | "leave"
   | "alpha"
   | "off"
+  | "overtime"
   | "nodata";
 
 interface DayRecord {
@@ -165,6 +178,7 @@ const STATUS_LABEL: Record<Status, string> = {
   late: "Terlambat",
   sick: "Sakit",
   leave: "Izin/Cuti",
+  overtime: "lembur",
   alpha: "Alpha",
   off: "Libur/Off",
   nodata: "Tidak Ada Data",
@@ -178,6 +192,7 @@ const STATUS_CLASS: Record<Status, string> = {
   alpha: "bg-red-600",
   off: "bg-gray-300",
   nodata: "bg-gray-100 border border-dashed border-gray-300",
+  overtime: "bg-teal-600",
 };
 
 function rupiah(n: number) {
@@ -213,124 +228,156 @@ export default function AttendancePage() {
 
   return (
     <div className="p-5 space-y-5">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-2xl font-bold">Data Absensi Kehadiran Karyawan</h1>
-        <div className="flex items-center gap-2">
-          <MonthPicker
-            year={year}
-            month={month}
-            onChange={(y, m) => {
-              setYear(y);
-              setMonth(m);
-            }}
-          />
-          <Button>Apply Filter</Button>
-          <Button
-            variant="outline"
-            onClick={() => {
-              const t = new Date();
-              setYear(t.getFullYear());
-              setMonth(t.getMonth());
-            }}
-          >
-            Ke Bulan Ini
-          </Button>
+      <Sheet>
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h1 className="text-2xl font-bold">
+            Data Absensi Kehadiran Karyawan
+          </h1>
+          <div className="flex items-center gap-2">
+            <MonthPicker
+              year={year}
+              month={month}
+              onChange={(y, m) => {
+                setYear(y);
+                setMonth(m);
+              }}
+            />
+            <Button>Apply Filter</Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                const t = new Date();
+                setYear(t.getFullYear());
+                setMonth(t.getMonth());
+              }}
+            >
+              Ke Bulan Ini
+            </Button>
+          </div>
         </div>
-      </div>
-      <Card className="p-4">
-        <Legend />
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full min-w-[900px] border-separate border-spacing-y-6">
-            <thead>
-              <tr>
-                <th className="text-left text-sm font-medium text-gray-600 w-48 align-bottom">
-                  Karyawan
-                </th>
-                {days.map((d) => (
-                  <th
-                    key={d}
-                    className="text-xs font-medium text-gray-500 text-center px-1 align-bottom"
-                  >
-                    {pad2(d)}
+        <Card className="p-4">
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Edit profile</SheetTitle>
+              <SheetDescription>
+                Make changes to your profile here. Click save when you&apos;re
+                done.
+              </SheetDescription>
+            </SheetHeader>
+            <div className="grid flex-1 auto-rows-min gap-6 px-4">
+              <div className="grid gap-3">
+                <Label htmlFor="sheet-demo-name">Name</Label>
+                <Input id="sheet-demo-name" defaultValue="Pedro Duarte" />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="sheet-demo-username">Username</Label>
+                <Input id="sheet-demo-username" defaultValue="@peduarte" />
+              </div>
+            </div>
+            <SheetFooter>
+              <Button type="submit">Save changes</Button>
+              <SheetClose asChild>
+                <Button variant="outline">Close</Button>
+              </SheetClose>
+            </SheetFooter>
+          </SheetContent>
+          <Legend />
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full min-w-[900px] border-separate border-spacing-y-6">
+              <thead>
+                <tr>
+                  <th className="text-left text-sm font-medium text-gray-600 w-48 align-bottom">
+                    Karyawan
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((emp, idx) => (
-                <tr key={emp.id}>
-                  <td className="align-top pb-2">
-                    <div className="font-medium">{emp.name}</div>
-                    <div className="text-xs text-gray-500">
-                      Rate Harian: {rupiah(emp.dailyRate)}
-                    </div>
-                  </td>
-                  {days.map((d) => {
-                    const rec = emp.records[d - 1];
-                    const st = rec?.status ?? "nodata";
-                    return (
-                      <td key={d} className="px-1">
-                        <div
-                          title={`Tanggal ${pad2(d)} — ${STATUS_LABEL[st]}${rec?.in ? ` | In ${rec.in}` : ""}${rec?.out ? ` | Out ${rec.out}` : ""}${rec?.note ? ` | ${rec.note}` : ""}`}
-                          className={cn(
-                            "h-5 w-5 rounded-sm transition-transform hover:scale-105",
-                            STATUS_CLASS[st],
-                          )}
-                        />
-                      </td>
-                    );
-                  })}
+                  {days.map((d) => (
+                    <th
+                      key={d}
+                      className="text-xs font-medium text-gray-500 text-center px-1 align-bottom"
+                    >
+                      {pad2(d)}
+                    </th>
+                  ))}
                 </tr>
-              ))}
+              </thead>
+              <tbody>
+                {employees.map((emp, idx) => (
+                  <tr key={emp.id}>
+                    <td className="align-top pb-2">
+                      <div className="font-medium">{emp.name}</div>
+                      <div className="text-xs text-gray-500">
+                        Rate Harian: {rupiah(emp.dailyRate)}
+                      </div>
+                    </td>
+                    {days.map((d) => {
+                      const rec = emp.records[d - 1];
+                      const st = rec?.status ?? "nodata";
+                      return (
+                        <SheetTrigger asChild key={d}>
+                          <td className="px-1">
+                            <div
+                              title={`Tanggal ${pad2(d)} — ${STATUS_LABEL[st]}${rec?.in ? ` | In ${rec.in}` : ""}${rec?.out ? ` | Out ${rec.out}` : ""}${rec?.note ? ` | ${rec.note}` : ""}`}
+                              className={cn(
+                                "h-5 w-5 rounded-sm transition-transform hover:scale-105",
+                                STATUS_CLASS[st],
+                              )}
+                            />
+                          </td>
+                        </SheetTrigger>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>{" "}
+        </Card>
+        <h1 className="text-2xl font-bold">Data Gaji</h1>
+        <Card className="p-4">
+          <table>
+            <tbody>
+              {employees.map((emp, i) => {
+                const s = summaries[i];
+                return (
+                  <tr key={`sum-${emp.id}`}>
+                    <td className="pt-2">
+                      <div className="text-sm font-semibold">
+                        Total Gaji {emp.name}
+                      </div>
+                    </td>
+                    <td colSpan={days.length} className="pt-2">
+                      <div className="flex flex-wrap items-center gap-6 text-sm">
+                        <span className="font-semibold">
+                          {rupiah(Math.round(s.total))}
+                        </span>
+                        <span>Hadir: {s.present}</span>
+                        <span>Terlambat: {s.late}</span>
+                        <span>Sakit: {s.sick}</span>
+                        <span>lembur: 8 jam , Total : Rp 300.000 </span>
+                        <span>Izin: {s.leave}</span>
+                        <span>Alpha: {s.alpha}</span>
+                        <span>Off: {s.off}</span>
+                        <span>Data kosong: {s.nodata}</span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-      </Card>
-      <h1 className="text-2xl font-bold">Data Gaji</h1>
-      <Card className="p-4">
-        <table>
-          <tbody>
-            {employees.map((emp, i) => {
-              const s = summaries[i];
-              return (
-                <tr key={`sum-${emp.id}`}>
-                  <td className="pt-2">
-                    <div className="text-sm font-semibold">
-                      Total Gaji {emp.name}
-                    </div>
-                  </td>
-                  <td colSpan={days.length} className="pt-2">
-                    <div className="flex flex-wrap items-center gap-6 text-sm">
-                      <span className="font-semibold">
-                        {rupiah(Math.round(s.total))}
-                      </span>
-                      <span>Hadir: {s.present}</span>
-                      <span>Terlambat: {s.late}</span>
-                      <span>Sakit: {s.sick}</span>
-                      <span>Izin: {s.leave}</span>
-                      <span>Alpha: {s.alpha}</span>
-                      <span>Off: {s.off}</span>
-                      <span>Data kosong: {s.nodata}</span>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-sm">
-            Total Gaji Semua Karyawan:{" "}
-            <span className="font-semibold ">
-              {rupiah(Math.round(totalPayroll))}
-            </span>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm">
+              Total Gaji Semua Karyawan:{" "}
+              <span className="font-semibold ">
+                {rupiah(Math.round(totalPayroll))}
+              </span>
+            </div>
+            <div className="text-xs text-gray-500">
+              *Simulasi kebijakan: Telat dipotong 10%, Sakit dibayar penuh,
+              Izin/Alpha sesuai konfigurasi.
+            </div>
           </div>
-          <div className="text-xs text-gray-500">
-            *Simulasi kebijakan: Telat dipotong 10%, Sakit dibayar penuh,
-            Izin/Alpha sesuai konfigurasi.
-          </div>
-        </div>
-      </Card>
+        </Card>{" "}
+      </Sheet>
     </div>
   );
 }
@@ -344,6 +391,7 @@ function Legend() {
     { status: "alpha", label: "Alpha" },
     { status: "off", label: "Libur/Off" },
     { status: "nodata", label: "Tidak Ada Data" },
+    { status: "overtime", label: "overtime" },
   ];
   return (
     <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">

@@ -140,7 +140,9 @@ export default function InventoryTrackingPage() {
               <TableHead>Tangaal Pembelian</TableHead>
               <TableHead> Tanggal Penjualan </TableHead>
               <TableHead>Rencana Penggunaan</TableHead>
-              <TableHead className="text-right">Nominal</TableHead>
+              <TableHead>jumlah </TableHead>
+              <TableHead className="text-right">Harga beli</TableHead>
+              <TableHead className="text-right">Harga jual</TableHead>
               <TableHead className="text-right"></TableHead>
             </TableRow>
           </TableHeader>
@@ -150,6 +152,8 @@ export default function InventoryTrackingPage() {
                 <TableCell className="font-medium">{invoice.invoice}</TableCell>
                 <TableCell>{invoice.paymentStatus}</TableCell>
                 <TableCell>{invoice.paymentMethod}</TableCell>
+                <TableCell>{invoice.paymentMethod}</TableCell>
+                <TableCell>{invoice.totalAmount}</TableCell>
                 <TableCell>{invoice.totalAmount}</TableCell>
                 <TableCell>{invoice.totalAmount}</TableCell>
                 <TableCell className="text-right">
