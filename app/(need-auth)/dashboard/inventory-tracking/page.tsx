@@ -37,56 +37,131 @@ import {
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV003",
-    paymentStatus: "Unpaid",
-    totalAmount: "$350.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV004",
-    paymentStatus: "Paid",
-    totalAmount: "$450.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV005",
-    paymentStatus: "Paid",
-    totalAmount: "$550.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV006",
-    paymentStatus: "Pending",
-    totalAmount: "$200.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV007",
-    paymentStatus: "Unpaid",
-    totalAmount: "$300.00",
-    paymentMethod: "Credit Card",
-  },
-];
+import {
+  getAllInventoryTracking,
+  deleteInventoryTracking,
+  InventoryTracking,
+  updateInventoryTracking,
+} from "@/services/api/inventory-tracking";
+import { toast } from "sonner";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import Loading from "@/components/Loading";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { formatRupiah } from "@/lib/formatRupiah";
+import dayjs from "dayjs";
+import { useState } from "react";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import ModalAddInventory from "@/components/inventory-tracking/ModalAddInventory";
 
 export default function InventoryTrackingPage() {
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [selectedInvoice, setSelectedInvoice] =
+    useState<InventoryTracking | null>(null);
+  const [open, setOpen] = useState(false);
+  const [openDialogDelete, setOpenDialogDelete] = useState(false);
+  const [form, setForm] = useState({
+    id: selectedInvoice?.id,
+    sold_at: "",
+    sell_price: "",
+  });
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  const { data, isLoading, isError, error, refetch } = useQuery<
+    InventoryTracking[]
+  >({
+    queryKey: ["inventory-tracking"],
+    queryFn: getAllInventoryTracking,
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: { sold_at: string | Date; sell_price: number };
+    }) => updateInventoryTracking(id, payload),
+    onSuccess: () => {
+      refetch();
+      toast.success("Data berhasil di edit");
+      setForm({
+        id: 0,
+        sold_at: "",
+        sell_price: "",
+      });
+    },
+    onError: (err: unknown) => {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Gagal menghapus data");
+      }
+    },
+  });
+  function handleSubmit() {
+    const payload = {
+      ...form,
+      id: selectedInvoice?.id,
+      sold_at: form.sold_at ? new Date(form.sold_at) : undefined,
+      sell_price: parseInt(form.sell_price) || 0,
+    };
+    updateMutation.mutate({
+      id: payload.id ?? 0,
+      payload: {
+        sold_at: payload.sold_at || "", // kalau kosong jadi string kosong
+        sell_price: payload.sell_price || 0, // kalau kosong jadi nol
+      },
+    });
+
+    console.log(payload);
+    setOpen(false);
+  }
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteInventoryTracking(id),
+    onSuccess: () => {
+      toast.success("Data berhasil dihapus");
+
+      refetch();
+    },
+    onError: (err: unknown) => {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Gagal menghapus data");
+      }
+    },
+  });
+  if (deleteMutation.isPending) {
+    return <Loading />;
+  }
   return (
     <div className="p-5 ">
       <h1 className="text-2xl font-bold">
-        Data Pembelian Dan Penjualan Barang
+        Data Pembelian Dan Penjualan BarangS
       </h1>
       <div className="flex gap-3 mt-5">
         <Input type="search" placeholder="Search..." className="" />
@@ -128,79 +203,187 @@ export default function InventoryTrackingPage() {
       <Card className="p-5  mt-5">
         <div className="gap-5 flex justify-end">
           <Button className=" ">Export To Exel</Button>
-          <Button variant="outline" className="">
-            + Tambah Transksi
-          </Button>
-        </div>
-        <Table>
-          <TableHeader className="bg-muted">
-            <TableRow>
-              <TableHead className="w-[100px]">No Transaksi</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>Tangaal Pembelian</TableHead>
-              <TableHead> Tanggal Penjualan </TableHead>
-              <TableHead>Rencana Penggunaan</TableHead>
-              <TableHead>jumlah </TableHead>
-              <TableHead className="text-right">Harga beli</TableHead>
-              <TableHead className="text-right">Harga jual</TableHead>
-              <TableHead className="text-right"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.invoice}>
-                <TableCell className="font-medium">{invoice.invoice}</TableCell>
-                <TableCell>{invoice.paymentStatus}</TableCell>
-                <TableCell>{invoice.paymentMethod}</TableCell>
-                <TableCell>{invoice.paymentMethod}</TableCell>
-                <TableCell>{invoice.totalAmount}</TableCell>
-                <TableCell>{invoice.totalAmount}</TableCell>
-                <TableCell>{invoice.totalAmount}</TableCell>
-                <TableCell className="text-right">
-                  {invoice.totalAmount}
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                        size="icon"
-                      >
-                        <IconDotsVertical />
-                        <span className="sr-only">Open menu</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
 
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500">
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+          <ModalAddInventory />
+        </div>
+        <AlertDialog open={openDialogDelete} onOpenChange={setOpenDialogDelete}>
+          <Sheet open={open} onOpenChange={setOpen}>
+            <Table>
+              <TableHeader className="bg-muted">
+                <TableRow>
+                  <TableHead className="w-[100px]">No Transaksi</TableHead>
+                  <TableHead>Nama</TableHead>
+                  <TableHead>Tangaal Pembelian</TableHead>
+                  <TableHead> Tanggal Penjualan </TableHead>
+                  <TableHead>Rencana Penggunaan</TableHead>
+                  <TableHead>jumlah </TableHead>
+                  <TableHead className="text-right">Harga beli</TableHead>
+                  <TableHead className="text-right">Harga jual</TableHead>
+                  <TableHead className="text-right"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9}>
+                      <Loading />
+                    </TableCell>
+                  </TableRow>
+                ) : !data || data.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={9}
+                      className="text-center text-muted-foreground py-6"
+                    >
+                      Tidak ada data
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  data?.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">
+                        {invoice.transaction_no}
+                      </TableCell>
+                      <TableCell>{invoice.name}</TableCell>
+                      <TableCell>
+                        {invoice.bought_at
+                          ? dayjs(invoice.bought_at).format("DD/MM/YYYY")
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        {invoice.sold_at
+                          ? dayjs(invoice.sold_at).format("DD/MM/YYYY")
+                          : "-"}
+                      </TableCell>
+                      <TableCell>{invoice.planned_usage}</TableCell>
+                      <TableCell>{invoice.quantity} </TableCell>
+                      <TableCell>{formatRupiah(+invoice.buy_price)}</TableCell>
+                      <TableCell className="text-right">
+                        {formatRupiah(+invoice.sell_price)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                              size="icon"
+                            >
+                              <IconDotsVertical />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setTimeout(() => {
+                                  setSelectedInvoice(invoice);
+                                  setOpen(true);
+                                }, 50);
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-500"
+                              onClick={() => {
+                                setTimeout(() => {
+                                  setOpenDialogDelete(true);
+                                  setDeleteTargetId(invoice.id);
+                                }, 50);
+                              }}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious href="#" />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationLink href="#">1</PaginationLink>
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationEllipsis />
+                </PaginationItem>
+                <PaginationItem>
+                  <PaginationNext href="#" />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Tandai item ini sebagai terjual</SheetTitle>
+                <SheetDescription>
+                  Dengan mengklik simpan item ini otomatis ditandai sebagai
+                  terjual
+                </SheetDescription>
+                <SheetTitle>
+                  No Transaksi : {selectedInvoice?.transaction_no}
+                </SheetTitle>
+              </SheetHeader>
+              <div className="grid flex-1 auto-rows-min gap-6 px-4">
+                <div className="grid gap-3">
+                  <Label htmlFor="sheet-demo-name">Harga Penjualan</Label>
+                  <Input
+                    name="sell_price"
+                    type="number"
+                    value={form.sell_price}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="grid gap-3">
+                  <Label htmlFor="sheet-demo-username">Tanggal Terjual</Label>
+                  <Input
+                    name="sold_at"
+                    type="date"
+                    value={form.sold_at}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <SheetFooter>
+                <Button onClick={() => handleSubmit()}>Save changes</Button>
+                <SheetClose asChild>
+                  <Button variant="outline">Close</Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
+
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your
+                account and remove your data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  if (deleteTargetId !== null) {
+                    deleteMutation.mutate(deleteTargetId);
+                  }
+                  setDeleteTargetId(null);
+                }}
+              >
+                Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </Card>
     </div>
   );
