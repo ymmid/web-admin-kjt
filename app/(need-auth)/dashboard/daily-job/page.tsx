@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -18,78 +18,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-
-type JobItem = { name: string; nik: string; jobs: string[] };
-type DailyData = { date: string; items: JobItem[] };
-
-// === Hardcode data contoh (siap hingga 4 orang per hari) ===
-const DATA_SOURCE: DailyData[] = [
-  {
-    date: "2025-08-17",
-    items: [
-      {
-        name: "Reza",
-        nik: "EMP-001",
-        jobs: ["Servis mesin A", "Cek oli line 1"],
-      },
-      {
-        name: "Rifky",
-        nik: "EMP-002",
-        jobs: ["Kalibrasi sensor", "Dokumentasi harian"],
-      },
-      // nanti tinggal tambah dua lagi untuk 4 orang/hari
-      // { name: "Orang-3", nik: "EMP-003", jobs: ["..."] },
-      // { name: "Orang-4", nik: "EMP-004", jobs: ["..."] },
-    ],
-  },
-  {
-    date: "2025-08-20",
-    items: [
-      { name: "Reza", nik: "EMP-001", jobs: ["Setup mesin CNC B"] },
-      { name: "Rifky", nik: "EMP-002", jobs: ["QA sampling batch #192"] },
-    ],
-  },
-];
-
-function getDaysInMonth(year: number, monthIndex0: number) {
-  const days: Date[] = [];
-  const d = new Date(year, monthIndex0, 1);
-  while (d.getMonth() === monthIndex0) {
-    days.push(new Date(d));
-    d.setDate(d.getDate() + 1);
-  }
-  return days;
-}
+import { useQuery } from "@tanstack/react-query";
+import { getAllDailyJobs } from "@/services/api/daily-job";
 
 export default function DailyJobPage() {
-  // Atur bulan & tahun yang ingin ditampilkan
-  const year = 2025;
-  const monthIndex0 = 7; // 0=Jan, jadi 7 = Agustus
-  const monthName = useMemo(
-    () =>
-      new Date(year, monthIndex0, 1).toLocaleString("id-ID", {
-        month: "long",
-        year: "numeric",
-      }),
-    [year, monthIndex0],
-  );
+  const [filter, setFilter] = useState({
+    search: "",
+    status: "",
+    month: "",
+    year: "",
+  });
 
-  const days = useMemo(
-    () => getDaysInMonth(year, monthIndex0),
-    [year, monthIndex0],
-  );
-
-  const dataByDate = useMemo(() => {
-    const map = new Map<string, JobItem[]>();
-    for (const d of DATA_SOURCE) map.set(d.date, d.items);
-    return map;
-  }, []);
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["daily-jobs", filter],
+    queryFn: ({ queryKey }) => getAllDailyJobs(),
+  });
 
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="flex justify-between">
         <h1 className="text-2xl font-bold mb-4">
-          Laporan Harian Pekerjaan • {monthName}
+          Laporan Harian Pekerjaan •{" "}
+          {data?.[0] &&
+            (() => {
+              const [year, month] = data[0].date.split("-");
+              return ` ${month}-${year}`;
+            })()}
         </h1>
         <div className="flex gap-4">
           <Select>
@@ -117,26 +71,16 @@ export default function DailyJobPage() {
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4">
-        {days.map((d) => {
-          const yyyy = d.getFullYear();
-          const mm = String(d.getMonth() + 1).padStart(2, "0");
-          const dd = String(d.getDate()).padStart(2, "0");
-          const key = `${yyyy}-${mm}-${dd}`;
-          const items = dataByDate.get(key) ?? [];
-
+        {data?.map((items) => {
           return (
-            <Card key={key} className="border shadow-sm">
+            <Card key={items.date} className="border shadow-sm">
               <CardHeader className="py-3">
                 <CardTitle className="text-base font-semibold">
-                  {d.toLocaleDateString("id-ID", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {items.date}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-0">
-                {items.length === 0 ? (
+                {items.items.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Tidak ada data.
                   </p>
@@ -150,17 +94,17 @@ export default function DailyJobPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {items.slice(0, 4).map((it, idx) => (
-                        <TableRow key={idx}>
+                      {items.items.slice(0, 4).map((item, index) => (
+                        <TableRow key={index}>
                           <TableCell className="font-medium">
-                            {it.name}
+                            {item.name}
                           </TableCell>
-                          <TableCell>{it.nik}</TableCell>
+                          <TableCell>{item.nik}</TableCell>
                           <TableCell>
                             <ul className="list-disc list-inside space-y-1">
-                              {it.jobs.map((j, i) => (
+                              {item.jobs.map((j, i) => (
                                 <li key={i} className="text-sm">
-                                  {j}
+                                  {j.job_description}
                                 </li>
                               ))}
                             </ul>

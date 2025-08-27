@@ -37,53 +37,71 @@ import {
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import type { MoneyTracking } from "@/services/api/money-tracking";
+import {
+  deleteMoneyTracking,
+  getAllMoneyTracking,
+} from "@/services/api/money-tracking";
+import dayjs from "dayjs";
+import { formatRupiah } from "@/lib/formatRupiah";
+import AddMoneyTracking from "@/components/money-tracking/ModalAddMoneyTracking";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 
-const invoices = [
-  {
-    invoice: "INV001",
-    paymentStatus: "Paid",
-    totalAmount: "$250.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV002",
-    paymentStatus: "Pending",
-    totalAmount: "$150.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV003",
-    paymentStatus: "Unpaid",
-    totalAmount: "$350.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV004",
-    paymentStatus: "Paid",
-    totalAmount: "$450.00",
-    paymentMethod: "Credit Card",
-  },
-  {
-    invoice: "INV005",
-    paymentStatus: "Paid",
-    totalAmount: "$550.00",
-    paymentMethod: "PayPal",
-  },
-  {
-    invoice: "INV006",
-    paymentStatus: "Pending",
-    totalAmount: "$200.00",
-    paymentMethod: "Bank Transfer",
-  },
-  {
-    invoice: "INV007",
-    paymentStatus: "Unpaid",
-    totalAmount: "$300.00",
-    paymentMethod: "Credit Card",
-  },
-];
+import { useState } from "react";
+import { toast } from "sonner";
+import Loading from "@/components/Loading";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import Image from "next/image";
 
 export default function MoneyTrakingPage() {
+  const [openDialogDelete, setOpenDialogDelete] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<MoneyTracking | null>(
+    null,
+  );
+  const [open, setOpen] = useState(false);
+  const { data, isLoading, isError, error, refetch } = useQuery<
+    MoneyTracking[]
+  >({
+    queryKey: ["money-tracking"],
+    queryFn: getAllMoneyTracking,
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteMoneyTracking(id),
+    onSuccess: () => {
+      toast.success("Data berhasil dihapus");
+
+      refetch();
+    },
+    onError: (err: unknown) => {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Gagal menghapus data");
+      }
+    },
+  });
+  if (deleteMutation.isPending) {
+    return <Loading />;
+  }
   return (
     <div className="p-5 ">
       <h1 className="text-2xl font-bold">Data Uang Masuk Dan Keluar</h1>
@@ -127,9 +145,8 @@ export default function MoneyTrakingPage() {
       <Card className="p-5  mt-5">
         <div className="gap-5 flex justify-end">
           <Button className=" ">Export To Exel</Button>
-          <Button variant="outline" className="">
-            + Tambah Transksi
-          </Button>
+
+          <AddMoneyTracking></AddMoneyTracking>
         </div>
         <Table>
           <TableHeader className="bg-muted">
@@ -143,14 +160,20 @@ export default function MoneyTrakingPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {invoices.map((invoice) => (
-              <TableRow key={invoice.invoice}>
-                <TableCell className="font-medium">{invoice.invoice}</TableCell>
-                <TableCell>{invoice.paymentStatus}</TableCell>
-                <TableCell>{invoice.paymentMethod}</TableCell>
-                <TableCell>{invoice.totalAmount}</TableCell>
+            {data?.map((item) => (
+              <TableRow key={item.id}>
+                <TableCell className="font-medium">
+                  {item.transaction_no}
+                </TableCell>
+                <TableCell>{item.purpose}</TableCell>
+                <TableCell>{item.flow_type}</TableCell>
+                <TableCell>
+                  {item.transaction_date
+                    ? dayjs(item.transaction_date).format("DD/MM/YYYY")
+                    : "-"}
+                </TableCell>
                 <TableCell className="text-right">
-                  {invoice.totalAmount}
+                  {formatRupiah(+item.amount)}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -165,9 +188,26 @@ export default function MoneyTrakingPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-32">
-                      <DropdownMenuItem>Edit</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setTimeout(() => {
+                            setSelectedInvoice(item);
+                            setOpen(true);
+                          }, 50);
+                        }}
+                      >
+                        Detail
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500">
+                      <DropdownMenuItem
+                        className="text-red-500"
+                        onClick={() => {
+                          setTimeout(() => {
+                            setOpenDialogDelete(true);
+                            setDeleteTargetId(item.id);
+                          }, 50);
+                        }}
+                      >
                         Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -195,6 +235,91 @@ export default function MoneyTrakingPage() {
           </PaginationContent>
         </Pagination>
       </Card>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Detail Items</SheetTitle>
+            <SheetDescription>
+              Menampilkan detail untuk transaksi
+            </SheetDescription>
+            <SheetTitle>
+              No Transaksi : {selectedInvoice?.transaction_no}
+            </SheetTitle>
+            <SheetDescription>
+              <div>
+                <strong>Keperluan : </strong> {selectedInvoice?.purpose}
+              </div>
+              <div>
+                <strong>Jenis Transaksi : </strong> {selectedInvoice?.flow_type}
+              </div>
+              <div>
+                <strong>Tanggal Transaksi : </strong>
+
+                {dayjs(selectedInvoice?.transaction_date).format("DD/MM/YYYY")}
+              </div>
+              <div>
+                <strong>Nominal : </strong>
+                {formatRupiah(Number(selectedInvoice?.amount ?? 0))}
+              </div>
+              <div>
+                <strong>Dibuat : </strong>
+                {dayjs(selectedInvoice?.created_at).format("DD/MM/YYYY")}
+              </div>
+              <div>
+                <strong>Diupdate : </strong> {selectedInvoice?.updated_at}
+              </div>
+              <div>
+                <strong>Foto Struk : </strong>
+                {selectedInvoice?.proof_url ? (
+                  <div className="mt-2">
+                    <Image
+                      src={selectedInvoice?.proof_url || "/no-image.png"}
+                      alt="Foto Struk"
+                      width={400} // wajib isi width
+                      height={300} // wajib isi height
+                      className="max-h-52 rounded border object-contain"
+                    />
+                  </div>
+                ) : (
+                  <span className="italic text-muted-foreground ml-2">
+                    Tidak ada foto
+                  </span>
+                )}
+              </div>
+            </SheetDescription>
+          </SheetHeader>
+
+          <SheetFooter>
+            <SheetClose asChild>
+              <Button variant="outline">Close</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+      <AlertDialog open={openDialogDelete} onOpenChange={setOpenDialogDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteTargetId !== null) {
+                  deleteMutation.mutate(deleteTargetId);
+                }
+                setDeleteTargetId(null);
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

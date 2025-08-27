@@ -23,30 +23,9 @@ import React, { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-type Status =
-  | "present"
-  | "late"
-  | "sick"
-  | "leave"
-  | "alpha"
-  | "off"
-  | "overtime"
-  | "nodata";
-
-interface DayRecord {
-  date: string; // YYYY-MM-DD
-  status: Status;
-  in?: string; // HH:mm
-  out?: string; // HH:mm
-  note?: string;
-}
-
-interface Employee {
-  id: string;
-  name: string;
-  dailyRate: number;
-  records: DayRecord[];
-}
+import { getAllAttendances, Status } from "@/services/api/attendace-summary";
+import { useQuery } from "@tanstack/react-query";
+import { formatRupiah } from "@/lib/formatRupiah";
 
 function pad2(n: number) {
   return n.toString().padStart(2, "0");
@@ -56,135 +35,7 @@ function daysInMonth(year: number, monthIndex0: number) {
   return new Date(year, monthIndex0 + 1, 0).getDate();
 }
 
-function makeDateStr(year: number, monthIndex0: number, day: number) {
-  return `${year}-${pad2(monthIndex0 + 1)}-${pad2(day)}`;
-}
-
-function sampleStatus(day: number): Status {
-  if ([6, 7, 13, 14, 20, 21, 27, 28].includes(day)) return "off"; // weekend
-  if ([10].includes(day)) return "leave";
-  if ([3, 18, 31].includes(day)) return "late";
-  if ([5].includes(day)) return "sick";
-  if ([23].includes(day)) return "alpha";
-  return "present";
-}
-
-function buildEmployee(
-  id: string,
-  name: string,
-  dailyRate: number,
-  year: number,
-  monthIndex0: number,
-): Employee {
-  const dim = daysInMonth(year, monthIndex0);
-  const records: DayRecord[] = Array.from({ length: dim }, (_, i) => {
-    const d = i + 1;
-    const st = sampleStatus((d + (id.charCodeAt(0) % 3)) % 31 || d); // vary per employee
-    return {
-      date: makeDateStr(year, monthIndex0, d),
-      status: st,
-      in:
-        st === "present" || st === "late"
-          ? st === "late"
-            ? "09:15"
-            : "08:00"
-          : undefined,
-      out: st === "present" || st === "late" ? "17:00" : undefined,
-      note:
-        st === "leave"
-          ? "Izin seharian"
-          : st === "sick"
-            ? "Sakit (surat dokter)"
-            : st === "alpha"
-              ? "Tanpa keterangan"
-              : undefined,
-    } as DayRecord;
-  });
-  return { id, name, dailyRate, records };
-}
-
-const PENALTY = {
-  late: 0.1, // 10% potong harian jika terlambat (contoh)
-  alpha: 1.0, // potong penuh satu hari
-  leave: 0.0, // tidak dibayar/tergantung kebijakan; contoh: 0 (unpaid)
-  sick: 0.0, // dibayar penuh (contoh)
-  off: 0.0, // libur: tidak dihitung
-  nodata: 0.0,
-  present: 0.0,
-};
-
-function summarizeEmployee(emp: Employee) {
-  let present = 0,
-    late = 0,
-    sick = 0,
-    leave = 0,
-    alpha = 0,
-    off = 0,
-    nodata = 0,
-    paidDays = 0,
-    total = 0;
-
-  for (const r of emp.records) {
-    switch (r.status) {
-      case "present":
-        present++;
-        paidDays += 1;
-        total += emp.dailyRate;
-        break;
-      case "late":
-        late++;
-        paidDays += 1;
-        total += emp.dailyRate * (1 - PENALTY.late);
-        break;
-      case "sick":
-        sick++;
-        paidDays += 1; // paid
-        total += emp.dailyRate * (1 - PENALTY.sick);
-        break;
-      case "leave":
-        leave++;
-        // unpaid in this policy
-        total += emp.dailyRate * (1 - PENALTY.leave);
-        break;
-      case "alpha":
-        alpha++;
-        total += emp.dailyRate * (1 - PENALTY.alpha);
-        break;
-      case "off":
-        off++;
-        break;
-      case "nodata":
-        nodata++;
-        break;
-    }
-  }
-
-  return {
-    present,
-    late,
-    sick,
-    leave,
-    alpha,
-    off,
-
-    nodata,
-    paidDays,
-    total,
-  };
-}
-
-const STATUS_LABEL: Record<Status, string> = {
-  present: "Hadir",
-  late: "Terlambat",
-  sick: "Sakit",
-  leave: "Izin/Cuti",
-  overtime: "lembur",
-  alpha: "Alpha",
-  off: "Libur/Off",
-  nodata: "Tidak Ada Data",
-};
-
-const STATUS_CLASS: Record<Status, string> = {
+const statusColor: Record<Status, string> = {
   present: "bg-green-600",
   late: "bg-yellow-500",
   sick: "bg-blue-500",
@@ -194,14 +45,6 @@ const STATUS_CLASS: Record<Status, string> = {
   nodata: "bg-gray-100 border border-dashed border-gray-300",
   overtime: "bg-teal-600",
 };
-
-function rupiah(n: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 export default function AttendancePage() {
   const today = new Date();
@@ -213,18 +56,12 @@ export default function AttendancePage() {
     () => Array.from({ length: dim }, (_, i) => i + 1),
     [dim],
   );
-
-  const employees = useMemo(() => {
-    return [
-      buildEmployee("A", "Rifky R.", 180_000, year, month),
-      buildEmployee("B", "Andi Saputra", 200_000, year, month),
-      buildEmployee("C", "Sinta Putri", 175_000, year, month),
-      buildEmployee("D", "Budi K.", 185_000, year, month),
-    ];
-  }, [year, month]);
-
-  const summaries = employees.map((e) => summarizeEmployee(e));
-  const totalPayroll = summaries.reduce((acc, s) => acc + s.total, 0);
+  const year2 = 2025;
+  const month2 = 8;
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["attendances-summary", year2, month2],
+    queryFn: () => getAllAttendances({ year: year2, month: month2 }),
+  });
 
   return (
     <div className="p-5 space-y-5">
@@ -300,25 +137,27 @@ export default function AttendancePage() {
                 </tr>
               </thead>
               <tbody>
-                {employees.map((emp, idx) => (
-                  <tr key={emp.id}>
+                {data?.employees.map((employee, idx) => (
+                  <tr key={employee.employee_id}>
                     <td className="align-top pb-2">
-                      <div className="font-medium">{emp.name}</div>
+                      <div className="font-medium">
+                        {employee.employee_name}
+                      </div>
                       <div className="text-xs text-gray-500">
-                        Rate Harian: {rupiah(emp.dailyRate)}
+                        Rate Harian: {formatRupiah(+employee.salary)}
                       </div>
                     </td>
-                    {days.map((d) => {
-                      const rec = emp.records[d - 1];
+                    {days.map((day) => {
+                      const rec = employee.daily_status[day - 1];
                       const st = rec?.status ?? "nodata";
                       return (
-                        <SheetTrigger asChild key={d}>
+                        <SheetTrigger asChild key={day}>
                           <td className="px-1">
                             <div
-                              title={`Tanggal ${pad2(d)} — ${STATUS_LABEL[st]}${rec?.in ? ` | In ${rec.in}` : ""}${rec?.out ? ` | Out ${rec.out}` : ""}${rec?.note ? ` | ${rec.note}` : ""}`}
+                              title={`Tanggal ${pad2(day)}| ${rec.status} `}
                               className={cn(
                                 "h-5 w-5 rounded-sm transition-transform hover:scale-105",
-                                STATUS_CLASS[st],
+                                statusColor[st],
                               )}
                             />
                           </td>
@@ -335,28 +174,49 @@ export default function AttendancePage() {
         <Card className="p-4">
           <table>
             <tbody>
-              {employees.map((emp, i) => {
-                const s = summaries[i];
+              {data?.employees.map((employee, index) => {
+                const totalPresent = employee.daily_status.filter(
+                  (item) => item.status === Status.Present,
+                ).length;
+                const totalLeave = employee.daily_status.filter(
+                  (item) => item.status === Status.Leave,
+                ).length;
+                const totalSick = employee.daily_status.filter(
+                  (item) => item.status === Status.Sick,
+                ).length;
+                const totalAlpha = employee.daily_status.filter(
+                  (item) => item.status === Status.Alpha,
+                ).length;
+                const totalOff = employee.daily_status.filter(
+                  (item) => item.status === Status.Off,
+                ).length;
+                const totalNoData = employee.daily_status.filter(
+                  (item) => item.status === Status.NoData,
+                ).length;
+                const totalLate = employee.daily_status.filter(
+                  (item) => item.status === Status.Late,
+                ).length;
                 return (
-                  <tr key={`sum-${emp.id}`}>
+                  <tr key={`sum-${employee.employee_id}`}>
                     <td className="pt-2">
                       <div className="text-sm font-semibold">
-                        Total Gaji {emp.name}
+                        Total Gaji {employee.employee_name}
                       </div>
                     </td>
-                    <td colSpan={days.length} className="pt-2">
+                    <td colSpan={employee.daily_status.length} className="pt-2">
                       <div className="flex flex-wrap items-center gap-6 text-sm">
                         <span className="font-semibold">
-                          {rupiah(Math.round(s.total))}
+                          {formatRupiah(Math.round(+employee?.salary))}
                         </span>
-                        <span>Hadir: {s.present}</span>
-                        <span>Terlambat: {s.late}</span>
-                        <span>Sakit: {s.sick}</span>
+                        <span>Hadir: {totalPresent}</span>
+                        <span>Terlambat: {totalLate}</span>
+                        <span>Sakit: {totalSick}</span>
+
+                        <span>Izin: {totalLeave}</span>
+                        <span>Alpha: {totalAlpha}</span>
+                        <span>Off: {totalOff}</span>
+                        <span>Data kosong: {totalNoData}</span>
                         <span>lembur: 8 jam , Total : Rp 300.000 </span>
-                        <span>Izin: {s.leave}</span>
-                        <span>Alpha: {s.alpha}</span>
-                        <span>Off: {s.off}</span>
-                        <span>Data kosong: {s.nodata}</span>
                       </div>
                     </td>
                   </tr>
@@ -367,9 +227,7 @@ export default function AttendancePage() {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
               Total Gaji Semua Karyawan:{" "}
-              <span className="font-semibold ">
-                {rupiah(Math.round(totalPayroll))}
-              </span>
+              <span className="font-semibold ">Rp 5.000.000</span>
             </div>
             <div className="text-xs text-gray-500">
               *Simulasi kebijakan: Telat dipotong 10%, Sakit dibayar penuh,
@@ -384,20 +242,20 @@ export default function AttendancePage() {
 
 function Legend() {
   const items: { status: Status; label: string }[] = [
-    { status: "present", label: "Hadir" },
-    { status: "late", label: "Terlambat" },
-    { status: "sick", label: "Sakit" },
-    { status: "leave", label: "Izin/Cuti" },
-    { status: "alpha", label: "Alpha" },
-    { status: "off", label: "Libur/Off" },
-    { status: "nodata", label: "Tidak Ada Data" },
-    { status: "overtime", label: "overtime" },
+    { status: Status.Present, label: "Hadir" },
+    { status: Status.Late, label: "Terlambat" },
+    { status: Status.Sick, label: "Sakit" },
+    { status: Status.Leave, label: "Izin/Cuti" },
+    { status: Status.Alpha, label: "Alpha" },
+    { status: Status.Off, label: "Libur/Off" },
+    { status: Status.NoData, label: "Tidak Ada Data" },
+    { status: Status.Overtime, label: "overtime" },
   ];
   return (
     <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
       {items.map((it) => (
         <div key={it.status} className="flex items-center gap-2">
-          <span className={cn("h-3 w-3 rounded-sm", STATUS_CLASS[it.status])} />
+          <span className={cn("h-3 w-3 rounded-sm", statusColor[it.status])} />
           <span>{it.label}</span>
         </div>
       ))}
