@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { getProfile } from "@/services/api/auth";
+import { useQuery } from "@tanstack/react-query";
 
 type Role = "SUPERADMIN" | "ADMIN" | "STAFF" | "EMPLOYEE";
 
@@ -74,6 +74,10 @@ export default function ProfilePage() {
       alive = false;
     };
   }, []);
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["get-users"],
+    queryFn: getProfile,
+  });
 
   // fetch pilihan karyawan hanya saat diperlukan
   useEffect(() => {
@@ -179,7 +183,6 @@ export default function ProfilePage() {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>
-          <TabsTrigger value="employment">Employment</TabsTrigger>
         </TabsList>
 
         {/* PROFILE */}
@@ -192,25 +195,27 @@ export default function ProfilePage() {
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
+                  placeholder={data.name}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" value={me?.email ?? ""} disabled />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone (optional)</Label>
                 <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="08xxxxxxxxxx"
+                  id="email"
+                  value={me?.email ?? ""}
+                  placeholder={data.email}
+                  disabled
                 />
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
-                <Input id="role" value={me?.role ?? ""} disabled />
+                <Input
+                  id="role"
+                  placeholder={data.role}
+                  value={me?.role ?? ""}
+                  disabled
+                />
               </div>
             </div>
 
@@ -266,24 +271,8 @@ export default function ProfilePage() {
           </Card>
         </TabsContent>
 
-        {/* EMPLOYMENT LINK */}
         <TabsContent value="employment" className="mt-4">
           <Card className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="text-sm font-medium">
-                  This user is an employee
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Link akun ke data karyawan untuk akses portal & absensi.
-                </div>
-              </div>
-              <Switch
-                checked={isEmployee}
-                onCheckedChange={(v) => setIsEmployee(v)}
-              />
-            </div>
-
             {isEmployee && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">

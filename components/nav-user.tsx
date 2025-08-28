@@ -16,6 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
 import {
   SidebarMenu,
   SidebarMenuButton,
@@ -23,6 +25,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { logoutUser } from "@/services/api/auth";
+import { toast } from "sonner";
 
 export function NavUser({
   user,
@@ -33,8 +37,21 @@ export function NavUser({
     avatar: string;
   };
 }) {
+  const router = useRouter();
   const { isMobile } = useSidebar();
+  const handleLogOut = async () => {
+    try {
+      const res = await logoutUser();
+      toast.success("LogOut Berhasil");
+      router.push("/");
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
 
+      const message =
+        err.response?.data?.message || err.message || "Logout gagal";
+      toast.error(message);
+    }
+  };
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -85,7 +102,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogOut}>
               <IconLogout />
               Log out
             </DropdownMenuItem>

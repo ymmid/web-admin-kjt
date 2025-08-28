@@ -27,29 +27,26 @@ export default function AuthLayout({
   const refreshMutation = useMutation({
     mutationFn: getRefreshProfile,
     onSuccess: () => {
-      // Kalau refresh sukses, retry profile
       refetch();
     },
     onError: () => {
-      // Kalau gagal refresh, redirect ke login
       router.push("/");
     },
   });
 
-  // 3. Kalau error 401 (unauthorized), coba refresh
   useEffect(() => {
     if (isError && (error as AxiosError)?.response?.status === 401) {
       refreshMutation.mutate();
     }
-  }, [isError]);
+    if (!isLoading && user && user.role !== "admin") {
+      router.push("/employee-portal");
+    }
+    console.log("user", user?.role);
+  }, [isError, user]);
 
-  // 4. Loading spinner
   if (isLoading || refreshMutation.isPending)
     return <Loading label="Tunggu ya..." />;
 
-  // 5. Kalau sudah ada data user, render children/layout
-  if (user) return <>{children}</>;
-
-  // 6. Default: return null (atau bisa tambahkan loader/error UI)
-  return null;
+  if (!isLoading && user && user.role !== "admin") return null;
+  return <>{children}</>;
 }

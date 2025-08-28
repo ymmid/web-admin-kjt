@@ -29,115 +29,129 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
-const data = {
-  user: {
-    name: "Superadmin",
-    email: "admin@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Buat Surat Jalan",
-      url: "/dashboard/create-work-permit",
-      icon: IconDashboard,
-    },
-    {
-      title: "Pembelian & Penjualan Barang",
-      url: "/dashboard/inventory-tracking",
-      icon: IconListDetails,
-    },
-    {
-      title: "Uang Masuk & Keluar",
-      url: "/dashboard/money-tracking",
-      icon: IconChartBar,
-    },
-    {
-      title: "List Pekerjaan",
-      url: "/dashboard/job-list",
-      icon: IconFolder,
-    },
-    {
-      title: "Data Karyawan ",
-      url: "/dashboard/employees",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/dashboard/setting",
-      icon: IconSettings,
-    },
-  ],
-  documents: [
-    {
-      name: "Pekerjaan Harian",
-      url: "/dashboard/daily-job",
-      icon: IconDatabase,
-    },
-    {
-      name: "Absensi kehadiran",
-      url: "/dashboard/attendance",
-      icon: IconReport,
-    },
-    // {
-    //   name: "Word Assistant",
-    //   url: "#",
-    //   icon: IconFileWord,
-    // },
-  ],
-};
+import { useQuery } from "@tanstack/react-query";
+import { getProfile } from "@/services/api/auth";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const {
+    data: user,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+    retry: false,
+  });
+
+  const data = {
+    user: {
+      name: user.name,
+      email: user.email,
+      avatar: "/avatars/shadcn.jpg",
+    },
+    navMain: [
+      {
+        title: "Buat Surat Jalan",
+        url: "/dashboard/create-work-permit",
+        icon: IconDashboard,
+      },
+      {
+        title: "Pembelian & Penjualan Barang",
+        url: "/dashboard/inventory-tracking",
+        icon: IconListDetails,
+      },
+      {
+        title: "Uang Masuk & Keluar",
+        url: "/dashboard/money-tracking",
+        icon: IconChartBar,
+      },
+      {
+        title: "List Pekerjaan",
+        url: "/dashboard/job-list",
+        icon: IconFolder,
+      },
+      {
+        title: "Data Karyawan ",
+        url: "/dashboard/employees",
+        icon: IconUsers,
+      },
+    ],
+    navClouds: [
+      {
+        title: "Capture",
+        icon: IconCamera,
+        isActive: true,
+        url: "#",
+        items: [
+          {
+            title: "Active Proposals",
+            url: "#",
+          },
+          {
+            title: "Archived",
+            url: "#",
+          },
+        ],
+      },
+      {
+        title: "Proposal",
+        icon: IconFileDescription,
+        url: "#",
+        items: [
+          {
+            title: "Active Proposals",
+            url: "#",
+          },
+          {
+            title: "Archived",
+            url: "#",
+          },
+        ],
+      },
+      {
+        title: "Prompts",
+        icon: IconFileAi,
+        url: "#",
+        items: [
+          {
+            title: "Active Proposals",
+            url: "#",
+          },
+          {
+            title: "Archived",
+            url: "#",
+          },
+        ],
+      },
+    ],
+    navSecondary: [
+      {
+        title: "Settings",
+        url: "/dashboard/setting",
+        icon: IconSettings,
+      },
+    ],
+    documents: [
+      {
+        name: "Pekerjaan Harian",
+        url: "/dashboard/daily-job",
+        icon: IconDatabase,
+      },
+      {
+        name: "Absensi kehadiran",
+        url: "/dashboard/attendance",
+        icon: IconReport,
+      },
+      // {
+      //   name: "Word Assistant",
+      //   url: "#",
+      //   icon: IconFileWord,
+      // },
+    ],
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>

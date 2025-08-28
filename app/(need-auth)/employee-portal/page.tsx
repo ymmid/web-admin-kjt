@@ -21,7 +21,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import { CheckCircle2, Lock, LogIn, LogOut, Plus, Timer } from "lucide-react";
+import { CheckCircle2, Lock, LogIn, LogOut, Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getProfileEmployee } from "@/services/api/employee-portal";
 
 function fmtDateHeader(d: Date) {
   const id = new Intl.DateTimeFormat("id-ID", {
@@ -79,7 +81,11 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string }[] = [
 ];
 
 export default function PortalPage() {
-  // ==== Simulasi data hari ini (mock FE-first) ====
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ["profile-employee"],
+    queryFn: getProfileEmployee,
+    retry: false,
+  });
   const today = useMemo(() => new Date(), []);
   const todayStr = useMemo(
     () =>
@@ -179,21 +185,25 @@ export default function PortalPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage alt={name} src="" />
+              <AvatarImage alt={data?.employee?.photo_url || ""} src="" />
               <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-1">
-              <div className="text-lg font-semibold">{name}</div>
+              <div className="text-lg font-semibold">
+                {data?.employee?.name}
+              </div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
-                  {isCheckedIn ? (
+                  {data?.dailyAttendances?.time_in ? (
                     <>
                       <CheckCircle2 className="h-4 w-4" />
-                      Masuk:{" "}
-                      {new Date(attendance.checkInAt!).toLocaleTimeString(
-                        "id-ID",
-                        { hour: "2-digit", minute: "2-digit" },
-                      )}
+                      Masuk:
+                      {new Date(
+                        data?.dailyAttendances?.time_in,
+                      ).toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </>
                   ) : (
                     <>
@@ -207,14 +217,16 @@ export default function PortalPage() {
                   className="hidden h-4 md:block"
                 />
                 <span className="inline-flex items-center gap-1">
-                  {isCheckedOut ? (
+                  {data?.dailyAttendances?.time_out ? (
                     <>
                       <LogOut className="h-4 w-4" />
                       Pulang:{" "}
-                      {new Date(attendance.checkOutAt!).toLocaleTimeString(
-                        "id-ID",
-                        { hour: "2-digit", minute: "2-digit" },
-                      )}
+                      {new Date(
+                        data?.dailyAttendances?.time_out,
+                      ).toLocaleTimeString("id-ID", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </>
                   ) : (
                     <>
@@ -226,51 +238,25 @@ export default function PortalPage() {
               </div>
             </div>
           </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              onClick={handleCheckIn}
-              disabled={isCheckedIn}
-              variant={isCheckedIn ? "secondary" : "default"}
-              className="inline-flex items-center gap-2"
-            >
-              <LogIn className="h-4 w-4" />
-              Check-in
-            </Button>
-            <Button
-              onClick={handleCheckOut}
-              disabled={!isCheckedIn || isCheckedOut}
-              variant={!isCheckedIn || isCheckedOut ? "secondary" : "default"}
-              className="inline-flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Check-out
-            </Button>
-          </div>
         </div>
 
         <Separator className="my-4" />
 
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
           <Stat
             label="Jam Kerja Hari Ini"
-            value={fmtMinutes(attendance.workDurationMinutes)}
+            value={data?.dailyAttendances?.total_hours || "00:00"}
           />
-          <Stat
-            label="Lembur Hari Ini"
-            value={fmtMinutes(attendance.overtimeMinutes)}
-            icon={<Timer className="h-4 w-4" />}
-          />
+
           <Stat label="Total Kegiatan" value={String(activities.length)} />
           <Stat
             label="Status Input"
-            value={isLocked ? "Terkunci" : "Terbuka"}
+            value={!data?.dailyAttendances?.time_in ? "Terkunci" : "Terbuka"}
           />
         </div>
       </Card>
 
-      {/* Alerts gating */}
-      {!isCheckedIn && (
+      {!data?.dailyAttendances?.time_in && (
         <Alert>
           <Lock className="h-4 w-4" />
           <AlertTitle>Belum check-in</AlertTitle>
@@ -280,7 +266,7 @@ export default function PortalPage() {
           </AlertDescription>
         </Alert>
       )}
-      {isCheckedIn && cutoffPassed && (
+      {!data?.dailyAttendances?.time_in && (
         <Alert>
           <Lock className="h-4 w-4" />
           <AlertTitle>Periode input terkunci</AlertTitle>
@@ -291,7 +277,6 @@ export default function PortalPage() {
         </Alert>
       )}
 
-      {/* Kegiatan Hari Ini */}
       <Card className="p-4 space-y-4">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div className="text-lg font-semibold">Kegiatan Hari Ini</div>
@@ -299,7 +284,7 @@ export default function PortalPage() {
             <Dialog open={openAddWork} onOpenChange={setOpenAddWork}>
               <DialogTrigger asChild>
                 <Button
-                  disabled={isLocked}
+                  disabled={!data?.dailyAttendances?.time_in}
                   className="inline-flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
@@ -338,7 +323,7 @@ export default function PortalPage() {
             <Dialog open={openOT} onOpenChange={setOpenOT}>
               <DialogTrigger asChild>
                 <Button
-                  disabled={isLocked}
+                  disabled={!data?.dailyAttendances?.time_in}
                   variant="outline"
                   className="inline-flex items-center gap-2"
                 >
@@ -394,7 +379,6 @@ export default function PortalPage() {
           </div>
         </div>
 
-        {/* List Kegiatan */}
         {activities.length === 0 ? (
           <div className="text-sm text-muted-foreground">
             Belum ada kegiatan untuk hari ini.
@@ -467,7 +451,7 @@ function Stat({
   icon,
 }: {
   label: string;
-  value: string;
+  value: string | number;
   icon?: React.ReactNode;
 }) {
   return (

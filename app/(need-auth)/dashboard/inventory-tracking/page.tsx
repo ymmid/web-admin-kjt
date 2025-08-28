@@ -161,7 +161,7 @@ export default function InventoryTrackingPage() {
   return (
     <div className="p-5 ">
       <h1 className="text-2xl font-bold">
-        Data Pembelian Dan Penjualan BarangS
+        Data Pembelian Dan Penjualan Barang
       </h1>
       <div className="flex gap-3 mt-5">
         <Input type="search" placeholder="Search..." className="" />
