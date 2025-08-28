@@ -74,16 +74,27 @@ import Image from "next/image";
 export default function MoneyTrakingPage() {
   const [openDialogDelete, setOpenDialogDelete] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [tempSearch, setTempSearch] = useState("");
+
+  const [month, setMonth] = useState<number | undefined>();
+  const [year, setYear] = useState<number | undefined>();
   const [selectedInvoice, setSelectedInvoice] = useState<MoneyTracking | null>(
     null,
   );
   const [open, setOpen] = useState(false);
-  const { data, isLoading, isError, error, refetch } = useQuery<
-    MoneyTracking[]
-  >({
+  const {
+    data: basic,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["money-tracking"],
-    queryFn: getAllMoneyTracking,
+    queryFn: () => getAllMoneyTracking(currentPage, search, month, year),
   });
+  const data = basic?.data || [];
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteMoneyTracking(id),
     onSuccess: () => {
@@ -106,41 +117,75 @@ export default function MoneyTrakingPage() {
     <div className="p-5 ">
       <h1 className="text-2xl font-bold">Data Uang Masuk Dan Keluar</h1>
       <div className="flex gap-3 mt-5">
-        <Input type="search" placeholder="Search..." className="" />
-        <Button>
+        <Input
+          type="search"
+          placeholder="Search..."
+          value={tempSearch}
+          onChange={(e) => setTempSearch(e.target.value)}
+        />
+
+        <Button
+          onClick={() => {
+            setSearch(tempSearch);
+            refetch();
+          }}
+        >
           <FiSearch size={20} />
         </Button>
-        <Select>
+
+        <Select
+          value={month?.toString()}
+          onValueChange={(value) => setMonth(Number(value))}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter" />
+            <SelectValue placeholder="Pilih Bulan" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Fruits</SelectLabel>
-              <SelectItem value="apple">Apple</SelectItem>
-              <SelectItem value="banana">Banana</SelectItem>
-              <SelectItem value="blueberry">Blueberry</SelectItem>
-              <SelectItem value="grapes">Grapes</SelectItem>
-              <SelectItem value="pineapple">Pineapple</SelectItem>
+              <SelectLabel>Bulan</SelectLabel>
+              <SelectItem value="1">Januari</SelectItem>
+              <SelectItem value="2">Februari</SelectItem>
+              <SelectItem value="3">Maret</SelectItem>
+              <SelectItem value="4">April</SelectItem>
+              <SelectItem value="5">Mei</SelectItem>
+              <SelectItem value="6">Juni</SelectItem>
+              <SelectItem value="7">Juli</SelectItem>
+              <SelectItem value="8">Agustus</SelectItem>
+              <SelectItem value="9">September</SelectItem>
+              <SelectItem value="10">Oktober</SelectItem>
+              <SelectItem value="11">November</SelectItem>
+              <SelectItem value="12">Desember</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Select>
+
+        <Select
+          value={year?.toString()}
+          onValueChange={(value) => setYear(Number(value))}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter" />
+            <SelectValue placeholder="Pilih Tahun" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Fruits</SelectLabel>
-              <SelectItem value="apple">Apple</SelectItem>
-              <SelectItem value="banana">Banana</SelectItem>
-              <SelectItem value="blueberry">Blueberry</SelectItem>
-              <SelectItem value="grapes">Grapes</SelectItem>
-              <SelectItem value="pineapple">Pineapple</SelectItem>
+              <SelectLabel>Tahun</SelectLabel>
+              {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                <SelectItem key={y} value={y.toString()}>
+                  {y}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Button>Apply Filter</Button>
+
+        <Button
+          onClick={() => {
+            setCurrentPage(1); // reset ke halaman 1
+            refetch(); // fetch data baru dengan bulan & tahun terpilih
+          }}
+        >
+          Apply Filter
+        </Button>
       </div>
       <Card className="p-5  mt-5">
         <div className="gap-5 flex justify-end">
@@ -245,48 +290,47 @@ export default function MoneyTrakingPage() {
             <SheetTitle>
               No Transaksi : {selectedInvoice?.transaction_no}
             </SheetTitle>
-            <SheetDescription>
-              <div>
-                <strong>Keperluan : </strong> {selectedInvoice?.purpose}
-              </div>
-              <div>
-                <strong>Jenis Transaksi : </strong> {selectedInvoice?.flow_type}
-              </div>
-              <div>
-                <strong>Tanggal Transaksi : </strong>
 
-                {dayjs(selectedInvoice?.transaction_date).format("DD/MM/YYYY")}
-              </div>
-              <div>
-                <strong>Nominal : </strong>
-                {formatRupiah(Number(selectedInvoice?.amount ?? 0))}
-              </div>
-              <div>
-                <strong>Dibuat : </strong>
-                {dayjs(selectedInvoice?.created_at).format("DD/MM/YYYY")}
-              </div>
-              <div>
-                <strong>Diupdate : </strong> {selectedInvoice?.updated_at}
-              </div>
-              <div>
-                <strong>Foto Struk : </strong>
-                {selectedInvoice?.proof_url ? (
-                  <div className="mt-2">
-                    <Image
-                      src={selectedInvoice?.proof_url || "/no-image.png"}
-                      alt="Foto Struk"
-                      width={400} // wajib isi width
-                      height={300} // wajib isi height
-                      className="max-h-52 rounded border object-contain"
-                    />
-                  </div>
-                ) : (
-                  <span className="italic text-muted-foreground ml-2">
-                    Tidak ada foto
-                  </span>
-                )}
-              </div>
-            </SheetDescription>
+            <div>
+              <strong>Keperluan : </strong> {selectedInvoice?.purpose}
+            </div>
+            <div>
+              <strong>Jenis Transaksi : </strong> {selectedInvoice?.flow_type}
+            </div>
+            <div>
+              <strong>Tanggal Transaksi : </strong>
+
+              {dayjs(selectedInvoice?.transaction_date).format("DD/MM/YYYY")}
+            </div>
+            <div>
+              <strong>Nominal : </strong>
+              {formatRupiah(Number(selectedInvoice?.amount ?? 0))}
+            </div>
+            <div>
+              <strong>Dibuat : </strong>
+              {dayjs(selectedInvoice?.created_at).format("DD/MM/YYYY")}
+            </div>
+            <div>
+              <strong>Diupdate : </strong> {selectedInvoice?.updated_at}
+            </div>
+            <div>
+              <strong>Foto Struk : </strong>
+              {selectedInvoice?.proof_url ? (
+                <div className="mt-2">
+                  <Image
+                    src={selectedInvoice?.proof_url || "/no-image.png"}
+                    alt="Foto Struk"
+                    width={400} // wajib isi width
+                    height={300} // wajib isi height
+                    className="max-h-52 rounded border object-contain"
+                  />
+                </div>
+              ) : (
+                <span className="italic text-muted-foreground ml-2">
+                  Tidak ada foto
+                </span>
+              )}
+            </div>
           </SheetHeader>
 
           <SheetFooter>

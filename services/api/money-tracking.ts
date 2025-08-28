@@ -22,10 +22,36 @@ export type MoneyTracking = {
   updated_at: string;
   deleted_at: string | null;
 };
+export type MoneyTrackingMeta = {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+};
+export type MoneyTrackingResponse = {
+  data: MoneyTracking[];
+  meta: MoneyTrackingMeta;
+};
 export const updateMoneyTrackingSchema = createMoneyTrackingSchema.partial();
 
-export async function getAllMoneyTracking(): Promise<MoneyTracking[]> {
-  const res = await axiosInstance.get("/money-tracking");
+export async function getAllMoneyTracking(
+  page = 1,
+  search?: string,
+  month?: number,
+  year?: number
+): Promise<MoneyTrackingResponse> {
+  const res = await axiosInstance.get<MoneyTrackingResponse>(
+    "/money-tracking",
+    {
+      params: {
+        page,
+        search: search?.trim() || undefined,
+        month: month || undefined,
+        year: year || undefined,
+      },
+    }
+  );
+
   return res.data;
 }
 

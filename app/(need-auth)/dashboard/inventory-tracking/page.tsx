@@ -2,7 +2,6 @@
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -42,6 +41,7 @@ import {
   deleteInventoryTracking,
   InventoryTracking,
   updateInventoryTracking,
+  getAllInventoryTrackingNoLimit,
 } from "@/services/api/inventory-tracking";
 import { toast } from "sonner";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -70,11 +70,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import ModalAddInventory from "@/components/inventory-tracking/ModalAddInventory";
+import { exportInventoryToExcel } from "@/lib/exportToExelInventoryTracking";
 
 export default function InventoryTrackingPage() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [tempSearch, setTempSearch] = useState("");
+  const [month, setMonth] = useState<number | undefined>();
+  const [year, setYear] = useState<number | undefined>();
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [selectedInvoice, setSelectedInvoice] =
     useState<InventoryTracking | null>(null);
+
   const [open, setOpen] = useState(false);
   const [openDialogDelete, setOpenDialogDelete] = useState(false);
   const [form, setForm] = useState({
@@ -90,13 +97,20 @@ export default function InventoryTrackingPage() {
     }));
   }
 
-  const { data, isLoading, isError, error, refetch } = useQuery<
-    InventoryTracking[]
-  >({
+  const {
+    data: basic,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ["inventory-tracking"],
-    queryFn: getAllInventoryTracking,
+    queryFn: () => getAllInventoryTracking(currentPage, search, month, year), // ← Kirim juga ke API
+    placeholderData: (prev) => prev,
   });
 
+  const meta = basic?.meta;
+  const data = basic?.data;
   const updateMutation = useMutation({
     mutationFn: ({
       id,
@@ -132,8 +146,8 @@ export default function InventoryTrackingPage() {
     updateMutation.mutate({
       id: payload.id ?? 0,
       payload: {
-        sold_at: payload.sold_at || "", // kalau kosong jadi string kosong
-        sell_price: payload.sell_price || 0, // kalau kosong jadi nol
+        sold_at: payload.sold_at || "",
+        sell_price: payload.sell_price || 0,
       },
     });
 
@@ -158,51 +172,96 @@ export default function InventoryTrackingPage() {
   if (deleteMutation.isPending) {
     return <Loading />;
   }
+  async function handleExportToExcel() {
+    try {
+      const allData = await getAllInventoryTrackingNoLimit(month, year);
+      console.log(allData);
+      exportInventoryToExcel(allData, month, year);
+    } catch (error) {
+      console.error(error);
+      toast.error("Gagal mengambil semua data!");
+    }
+  }
+
   return (
     <div className="p-5 ">
       <h1 className="text-2xl font-bold">
         Data Pembelian Dan Penjualan Barang
       </h1>
       <div className="flex gap-3 mt-5">
-        <Input type="search" placeholder="Search..." className="" />
-        <Button>
+        <Input
+          type="search"
+          placeholder="Search..."
+          value={tempSearch}
+          onChange={(e) => setTempSearch(e.target.value)}
+        />
+
+        <Button
+          onClick={() => {
+            setSearch(tempSearch);
+            refetch();
+          }}
+        >
           <FiSearch size={20} />
         </Button>
-        <Select>
+
+        <Select
+          value={month?.toString()}
+          onValueChange={(value) => setMonth(Number(value))}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter" />
+            <SelectValue placeholder="Pilih Bulan" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Fruits</SelectLabel>
-              <SelectItem value="apple">Apple</SelectItem>
-              <SelectItem value="banana">Banana</SelectItem>
-              <SelectItem value="blueberry">Blueberry</SelectItem>
-              <SelectItem value="grapes">Grapes</SelectItem>
-              <SelectItem value="pineapple">Pineapple</SelectItem>
+              <SelectLabel>Bulan</SelectLabel>
+              <SelectItem value="1">Januari</SelectItem>
+              <SelectItem value="2">Februari</SelectItem>
+              <SelectItem value="3">Maret</SelectItem>
+              <SelectItem value="4">April</SelectItem>
+              <SelectItem value="5">Mei</SelectItem>
+              <SelectItem value="6">Juni</SelectItem>
+              <SelectItem value="7">Juli</SelectItem>
+              <SelectItem value="8">Agustus</SelectItem>
+              <SelectItem value="9">September</SelectItem>
+              <SelectItem value="10">Oktober</SelectItem>
+              <SelectItem value="11">November</SelectItem>
+              <SelectItem value="12">Desember</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Select>
+
+        <Select
+          value={year?.toString()}
+          onValueChange={(value) => setYear(Number(value))}
+        >
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter" />
+            <SelectValue placeholder="Pilih Tahun" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectLabel>Fruits</SelectLabel>
-              <SelectItem value="apple">Apple</SelectItem>
-              <SelectItem value="banana">Banana</SelectItem>
-              <SelectItem value="blueberry">Blueberry</SelectItem>
-              <SelectItem value="grapes">Grapes</SelectItem>
-              <SelectItem value="pineapple">Pineapple</SelectItem>
+              <SelectLabel>Tahun</SelectLabel>
+              {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                <SelectItem key={y} value={y.toString()}>
+                  {y}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
-        <Button>Apply Filter</Button>
+
+        <Button
+          onClick={() => {
+            setCurrentPage(1); // reset ke halaman 1
+            refetch(); // fetch data baru dengan bulan & tahun terpilih
+          }}
+        >
+          Apply Filter
+        </Button>
       </div>
       <Card className="p-5  mt-5">
         <div className="gap-5 flex justify-end">
-          <Button className=" ">Export To Exel</Button>
+          <Button onClick={handleExportToExcel}>Export To Excel</Button>
 
           <ModalAddInventory />
         </div>
@@ -307,16 +366,50 @@ export default function InventoryTrackingPage() {
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious href="#" />
+                  <PaginationPrevious
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (meta && meta.currentPage > 1) {
+                        setCurrentPage(meta.currentPage - 1);
+                      }
+                    }}
+                    className={
+                      meta?.currentPage === 1
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
                 </PaginationItem>
+
+                {/* Nomor halaman dinamis */}
+                {Array.from({ length: meta?.totalPages ?? 1 }, (_, index) => (
+                  <PaginationItem key={index}>
+                    <PaginationLink
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage(index + 1);
+                      }}
+                      isActive={meta?.currentPage === index + 1}
+                    >
+                      {index + 1}
+                    </PaginationLink>
+                  </PaginationItem>
+                ))}
+
                 <PaginationItem>
-                  <PaginationLink href="#">1</PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationNext href="#" />
+                  <PaginationNext
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (meta && meta.currentPage < meta.totalPages) {
+                        setCurrentPage(meta.currentPage + 1);
+                      }
+                    }}
+                    className={
+                      meta && meta.currentPage === meta.totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
                 </PaginationItem>
               </PaginationContent>
             </Pagination>

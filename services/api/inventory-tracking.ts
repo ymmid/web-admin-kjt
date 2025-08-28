@@ -25,7 +25,6 @@ export type UpdateInventoryTracking = z.infer<
   typeof updateInventoryTrackingSchema
 >;
 
-// Backend Response Type
 export type InventoryTracking = {
   id: number;
   transaction_no: string;
@@ -42,12 +41,52 @@ export type InventoryTracking = {
   deleted_at: string | null;
 };
 
-// GET all
-export async function getAllInventoryTracking(): Promise<InventoryTracking[]> {
-  const res = await axiosInstance.get("/inventory-tracking");
+export type InventoryMeta = {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+};
+export type InventoryTrackingResponse = {
+  data: InventoryTracking[];
+  meta: InventoryMeta;
+};
+
+export async function getAllInventoryTracking(
+  page = 1,
+  search?: string,
+  month?: number,
+  year?: number
+): Promise<InventoryTrackingResponse> {
+  const res = await axiosInstance.get<InventoryTrackingResponse>(
+    "/inventory-tracking",
+    {
+      params: {
+        page,
+        search: search?.trim() || undefined,
+        month: month || undefined,
+        year: year || undefined,
+      },
+    }
+  );
+
   return res.data;
 }
-
+export async function getAllInventoryTrackingNoLimit(
+  month?: number,
+  year?: number
+): Promise<InventoryTracking[]> {
+  const res = await axiosInstance.get<InventoryTracking[]>(
+    "/inventory-tracking/all",
+    {
+      params: {
+        month: month || undefined,
+        year: year || undefined,
+      },
+    }
+  );
+  return res.data;
+}
 // GET by ID
 export async function getInventoryTrackingById(
   id: number
