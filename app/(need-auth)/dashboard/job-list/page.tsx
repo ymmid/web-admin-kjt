@@ -13,110 +13,103 @@ import {
 } from "@/components/ui/select";
 import { getAllJobList } from "@/services/api/job-list";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import TableDataJobList from "@/components/TableDataJobList";
 
 export default function JobListPage() {
-  const [filterDraft, setFilterDraft] = useState({
-    search: "",
-    status: "",
-    month: "",
-    year: "",
+  const [currentPage, setCurrentPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [tempSearch, setTempSearch] = useState("");
+
+  const [month, setMonth] = useState<number | undefined>();
+  const [year, setYear] = useState<number | undefined>();
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["job-list"],
+    queryFn: () => getAllJobList(currentPage, search, month, year),
+    enabled: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
-
-  const [filter, setFilter] = useState({
-    search: "",
-    status: "",
-    month: "",
-    year: "",
-  });
-
-  function cleanFilter(obj: Record<string, string>) {
-    return Object.fromEntries(
-      Object.entries(obj).filter(([_, v]) => v && v !== ""),
-    );
-  }
-
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["job-list", filter],
-    queryFn: ({ queryKey }) =>
-      getAllJobList(cleanFilter(queryKey[1] as Record<string, string>)),
-  });
-
-  const handleInputChange =
-    (field: keyof typeof filterDraft) => (val: string) => {
-      setFilterDraft((prev) => ({ ...prev, [field]: val }));
-    };
-
-  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFilterDraft((prev) => ({ ...prev, search: e.target.value }));
-  };
-
-  const handleApplyFilter = () => {
-    setFilter({ ...filterDraft });
-  };
-
+  useEffect(() => {
+    if (search !== "") {
+      refetch();
+    }
+  }, [search]);
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <h1 className="text-2xl font-bold px-5">Data Pekerjaan</h1>
-          <div className="flex gap-3 px-5">
+          <div className="flex gap-3 mt-5 px-5">
             <Input
               type="search"
-              value={filterDraft.search}
-              onChange={handleSearchInput}
               placeholder="Search..."
+              value={tempSearch}
+              onChange={(e) => setTempSearch(e.target.value)}
             />
-            <Button onClick={handleApplyFilter}>
+
+            <Button
+              onClick={() => {
+                setSearch(tempSearch);
+              }}
+            >
               <FiSearch size={20} />
             </Button>
+
             <Select
-              value={filterDraft.month}
-              onValueChange={handleInputChange("month")}
+              value={month?.toString()}
+              onValueChange={(value) => setMonth(Number(value))}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter Bulan" />
+                <SelectValue placeholder="Pilih Bulan" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Pilih Bulan</SelectLabel>
-                  <SelectItem value="01">Januari</SelectItem>
-                  <SelectItem value="02">Februari</SelectItem>
-                  <SelectItem value="03">Maret</SelectItem>
-                  <SelectItem value="04">April</SelectItem>
-                  <SelectItem value="05">Mei</SelectItem>
-                  <SelectItem value="06">Juni</SelectItem>
-                  <SelectItem value="07">Juli</SelectItem>
-                  <SelectItem value="08">Agustus</SelectItem>
-                  <SelectItem value="09">September</SelectItem>
+                  <SelectLabel>Bulan</SelectLabel>
+                  <SelectItem value="1">Januari</SelectItem>
+                  <SelectItem value="2">Februari</SelectItem>
+                  <SelectItem value="3">Maret</SelectItem>
+                  <SelectItem value="4">April</SelectItem>
+                  <SelectItem value="5">Mei</SelectItem>
+                  <SelectItem value="6">Juni</SelectItem>
+                  <SelectItem value="7">Juli</SelectItem>
+                  <SelectItem value="8">Agustus</SelectItem>
+                  <SelectItem value="9">September</SelectItem>
                   <SelectItem value="10">Oktober</SelectItem>
                   <SelectItem value="11">November</SelectItem>
                   <SelectItem value="12">Desember</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+
             <Select
-              value={filterDraft.year}
-              onValueChange={handleInputChange("year")}
+              value={year?.toString()}
+              onValueChange={(value) => setYear(Number(value))}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter Tahun" />
+                <SelectValue placeholder="Pilih Tahun" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Pilih Tahun</SelectLabel>
-                  <SelectItem value="2025">2025</SelectItem>
-                  <SelectItem value="2026">2026</SelectItem>
-                  <SelectItem value="2027">2027</SelectItem>
-                  <SelectItem value="2028">2028</SelectItem>
-                  <SelectItem value="2029">2029</SelectItem>
+                  <SelectLabel>Tahun</SelectLabel>
+                  {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                    <SelectItem key={y} value={y.toString()}>
+                      {y}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <Button onClick={handleApplyFilter}>Apply Filter</Button>
-            <Button variant="outline">Export Excel</Button>
-            <Button>+ Tambah Pekerjaan</Button>
+
+            <Button
+              onClick={() => {
+                setCurrentPage(1);
+                refetch();
+                setSearch("");
+              }}
+            >
+              Apply Filter
+            </Button>
           </div>
           <TableDataJobList />
         </div>

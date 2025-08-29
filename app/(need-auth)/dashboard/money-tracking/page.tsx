@@ -180,8 +180,9 @@ export default function MoneyTrakingPage() {
 
         <Button
           onClick={() => {
-            setCurrentPage(1); // reset ke halaman 1
-            refetch(); // fetch data baru dengan bulan & tahun terpilih
+            setCurrentPage(1);
+            refetch();
+            setSearch("");
           }}
         >
           Apply Filter

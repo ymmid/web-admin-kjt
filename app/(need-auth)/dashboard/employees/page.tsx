@@ -221,7 +221,7 @@ export default function EmployeeTabs() {
           {editData && (
             <ModalEditEmployees
               id={editTargetId || 0}
-              data={editData} // ✅ Sekarang selalu Employee, bukan null
+              data={editData}
               openDialogEdit={openDialogEdit}
               onOpenChange={setOpenDialogEdit}
             />

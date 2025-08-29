@@ -18,7 +18,11 @@ import { IconDotsVertical } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { Card } from "@/components/ui/card";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { deleteJobList, getAllJobList } from "@/services/api/job-list";
+import {
+  deleteJobList,
+  getAllJobList,
+  UpdateJobList,
+} from "@/services/api/job-list";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,14 +36,25 @@ import {
 import { useState } from "react";
 import Loading from "./Loading";
 import { toast } from "sonner";
+import ModalAddJobList from "./job-list/ModalAddJobList";
+import { formatRupiah } from "@/lib/formatRupiah";
+import ModalEditJobList from "./job-list/ModalEditJobList";
 
 export default function TableDataJobList() {
   const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const [openDialogDelete, setOpenDialogDelete] = useState(false);
-  const { data, isLoading, refetch } = useQuery({
+  const [openDialogEdit, setOpenDialogEdit] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<UpdateJobList | null>(null);
+  const {
+    data: basic,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["job-list"],
     queryFn: () => getAllJobList(),
   });
+  const data = basic?.data || [];
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteJobList(id),
     onSuccess: () => {
@@ -61,6 +76,11 @@ export default function TableDataJobList() {
   return (
     <div className="p-5">
       <Card className="p-5">
+        <div className="flex gap-2 items-center justify-end">
+          <Button variant="outline">Export Excel</Button>
+          <ModalAddJobList></ModalAddJobList>
+        </div>
+
         <Table>
           <TableHeader className="bg-muted">
             <TableRow>
@@ -110,7 +130,9 @@ export default function TableDataJobList() {
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">Pak Rahmat</TableCell>
-                  <TableCell className="text-right"></TableCell>
+                  <TableCell className="text-right">
+                    {formatRupiah(invoice.amount)}
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -124,7 +146,17 @@ export default function TableDataJobList() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-32">
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setTimeout(() => {
+                              setOpenDialogEdit(true);
+                              setEditTargetId(+invoice.id);
+                              setEditData(invoice);
+                            }, 50);
+                          }}
+                        >
+                          Edit
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="text-red-500"
@@ -170,6 +202,14 @@ export default function TableDataJobList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {editData && (
+        <ModalEditJobList
+          id={editTargetId || 0}
+          data={editData}
+          openDialogEdit={openDialogEdit}
+          onOpenChange={setOpenDialogEdit}
+        ></ModalEditJobList>
+      )}
     </div>
   );
 }

@@ -105,7 +105,7 @@ export default function InventoryTrackingPage() {
     refetch,
   } = useQuery({
     queryKey: ["inventory-tracking"],
-    queryFn: () => getAllInventoryTracking(currentPage, search, month, year), // ← Kirim juga ke API
+    queryFn: () => getAllInventoryTracking(currentPage, search, month, year),
     placeholderData: (prev) => prev,
   });
 
@@ -252,8 +252,9 @@ export default function InventoryTrackingPage() {
 
         <Button
           onClick={() => {
-            setCurrentPage(1); // reset ke halaman 1
-            refetch(); // fetch data baru dengan bulan & tahun terpilih
+            setCurrentPage(1);
+            refetch();
+            setSearch("");
           }}
         >
           Apply Filter

@@ -7,9 +7,11 @@ export const createJobListSchema = z.object({
   status: z.string().min(1, "Status wajib diisi"),
   start_date: z.coerce.date(),
   end_date: z.coerce.date().optional(),
+  amount: z.string().optional(),
 });
 
 export type JobList = {
+  amount: number;
   id: number;
   transaction_no: string;
   job_name: string;
@@ -21,19 +23,41 @@ export type JobList = {
   updated_at: string;
   deleted_at: string | null;
 };
+export type UpdateJobList = {
+  amount: number;
 
+  job_name: string;
+  company_name: string;
+  status: string;
+  start_date: string;
+  end_date: string | null;
+};
+export type Meta = {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+};
+export type JobListResponse = {
+  data: JobList[];
+  meta: Meta;
+};
 export const updateJobListSchema = createJobListSchema.partial();
-
-export async function getAllJobList(params?: {
-  search?: string;
-  status?: string;
-  company_name?: string;
-  start_date_from?: string;
-  start_date_to?: string;
-  skip?: number;
-  take?: number;
-}): Promise<JobList[]> {
-  const res = await axiosInstance.get("/job-list", { params });
+export type UpdateJobListDto = z.infer<typeof updateJobListSchema>;
+export async function getAllJobList(
+  page = 1,
+  search?: string,
+  month?: number,
+  year?: number
+): Promise<JobListResponse> {
+  const res = await axiosInstance.get("/job-list", {
+    params: {
+      page,
+      search: search?.trim() || undefined,
+      month: month || undefined,
+      year: year || undefined,
+    },
+  });
   return res.data;
 }
 
