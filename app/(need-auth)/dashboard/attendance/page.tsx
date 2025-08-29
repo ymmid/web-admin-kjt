@@ -2,7 +2,9 @@
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -19,13 +21,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getAllAttendances, Status } from "@/services/api/attendace-summary";
-import { useQuery } from "@tanstack/react-query";
+import {
+  AttendanceUpdateDto,
+  DailyStatusDto,
+  getAllAttendances,
+  Status,
+  updateDailyJob,
+} from "@/services/api/attendace-summary";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatRupiah } from "@/lib/formatRupiah";
+import { toast } from "sonner";
 
 function pad2(n: number) {
   return n.toString().padStart(2, "0");
@@ -48,19 +57,34 @@ const statusColor: Record<Status, string> = {
 
 export default function AttendancePage() {
   const today = new Date();
-  const [year, setYear] = useState<number>(today.getFullYear());
-  const [month, setMonth] = useState<number>(today.getMonth());
-
-  const dim = useMemo(() => daysInMonth(year, month), [year, month]);
-  const days = useMemo(
-    () => Array.from({ length: dim }, (_, i) => i + 1),
-    [dim],
+  const [status, setStatus] = useState<string>("nodata");
+  const [overtimeHours, setOvertimeHours] = useState<number>(0);
+  const [dailyAttendance, setDailyAttendance] = useState<DailyStatusDto | null>(
+    null,
   );
-  const year2 = 2025;
-  const month2 = 8;
+
+  const [month, setMonth] = useState<number | undefined>();
+  const [year, setYear] = useState<number | undefined>();
+
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["attendances-summary", year2, month2],
-    queryFn: () => getAllAttendances({ year: year2, month: month2 }),
+    queryKey: ["attendances-summary"],
+    queryFn: () => getAllAttendances({ month, year }),
+  });
+  const { mutate, isPending } = useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: AttendanceUpdateDto;
+    }) => updateDailyJob(id, payload),
+    onSuccess: () => {
+      refetch();
+      toast.success("Data berhasil diperbarui");
+    },
+    onError: (error) => {
+      toast.error("Data Gagal  diperbarui");
+    },
   });
 
   return (
@@ -68,24 +92,68 @@ export default function AttendancePage() {
       <Sheet>
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <h1 className="text-2xl font-bold">
-            Data Absensi Kehadiran Karyawan
+            Data Absensi Kehadiran Karyawan {data?.month}-{data?.year}
           </h1>
           <div className="flex items-center gap-2">
-            <MonthPicker
-              year={year}
-              month={month}
-              onChange={(y, m) => {
-                setYear(y);
-                setMonth(m);
+            <Select
+              value={month?.toString()}
+              onValueChange={(value) => setMonth(Number(value))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Pilih Bulan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Bulan</SelectLabel>
+                  <SelectItem value="1">Januari</SelectItem>
+                  <SelectItem value="2">Februari</SelectItem>
+                  <SelectItem value="3">Maret</SelectItem>
+                  <SelectItem value="4">April</SelectItem>
+                  <SelectItem value="5">Mei</SelectItem>
+                  <SelectItem value="6">Juni</SelectItem>
+                  <SelectItem value="7">Juli</SelectItem>
+                  <SelectItem value="8">Agustus</SelectItem>
+                  <SelectItem value="9">September</SelectItem>
+                  <SelectItem value="10">Oktober</SelectItem>
+                  <SelectItem value="11">November</SelectItem>
+                  <SelectItem value="12">Desember</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={year?.toString()}
+              onValueChange={(value) => setYear(Number(value))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Pilih Tahun" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Tahun</SelectLabel>
+                  {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                    <SelectItem key={y} value={y.toString()}>
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Button
+              onClick={() => {
+                refetch();
               }}
-            />
-            <Button>Apply Filter</Button>
+            >
+              Apply Filter
+            </Button>
             <Button
               variant="outline"
               onClick={() => {
-                const t = new Date();
-                setYear(t.getFullYear());
-                setMonth(t.getMonth());
+                setMonth(undefined);
+                setYear(undefined);
+                setTimeout(() => {
+                  refetch(); // ini akan jalan setelah state punya waktu update
+                }, 100); // bisa pakai 0 atau 10–50ms jika masih belum cukup
               }}
             >
               Ke Bulan Ini
@@ -93,31 +161,6 @@ export default function AttendancePage() {
           </div>
         </div>
         <Card className="p-4">
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Edit profile</SheetTitle>
-              <SheetDescription>
-                Make changes to your profile here. Click save when you&apos;re
-                done.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="grid flex-1 auto-rows-min gap-6 px-4">
-              <div className="grid gap-3">
-                <Label htmlFor="sheet-demo-name">Name</Label>
-                <Input id="sheet-demo-name" defaultValue="Pedro Duarte" />
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="sheet-demo-username">Username</Label>
-                <Input id="sheet-demo-username" defaultValue="@peduarte" />
-              </div>
-            </div>
-            <SheetFooter>
-              <Button type="submit">Save changes</Button>
-              <SheetClose asChild>
-                <Button variant="outline">Close</Button>
-              </SheetClose>
-            </SheetFooter>
-          </SheetContent>
           <Legend />
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[900px] border-separate border-spacing-y-6">
@@ -126,12 +169,12 @@ export default function AttendancePage() {
                   <th className="text-left text-sm font-medium text-gray-600 w-48 align-bottom">
                     Karyawan
                   </th>
-                  {days.map((d) => (
+                  {data?.employees[0]?.daily_status.map((entry) => (
                     <th
-                      key={d}
+                      key={entry.date}
                       className="text-xs font-medium text-gray-500 text-center px-1 align-bottom"
                     >
-                      {pad2(d)}
+                      {pad2(Number(entry.date.split("-")[2]))}
                     </th>
                   ))}
                 </tr>
@@ -147,18 +190,23 @@ export default function AttendancePage() {
                         Rate Harian: {formatRupiah(+employee.salary)}
                       </div>
                     </td>
-                    {days.map((day) => {
-                      const rec = employee.daily_status[day - 1];
-                      const st = rec?.status ?? "nodata";
+                    {employee?.daily_status.map((day) => {
+                      const st = day.status ?? "nodata";
+
                       return (
-                        <SheetTrigger asChild key={day}>
+                        <SheetTrigger asChild key={day.date}>
                           <td className="px-1">
                             <div
-                              title={`Tanggal ${pad2(day)}| ${rec.status} `}
+                              title={`Tanggal ${pad2(Number(day.date.split("-")[2]))} | ${day.status}`}
                               className={cn(
                                 "h-5 w-5 rounded-sm transition-transform hover:scale-105",
                                 statusColor[st],
                               )}
+                              onClick={() => {
+                                setDailyAttendance(day);
+                                setStatus(day.status ?? "nodata");
+                                setOvertimeHours(day.overtime_hours ?? 0);
+                              }}
                             />
                           </td>
                         </SheetTrigger>
@@ -226,7 +274,7 @@ export default function AttendancePage() {
           </table>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
-              Total Gaji Semua Karyawan:{" "}
+              Total Gaji Semua Karyawan:
               <span className="font-semibold ">Rp 5.000.000</span>
             </div>
             <div className="text-xs text-gray-500">
@@ -234,7 +282,71 @@ export default function AttendancePage() {
               Izin/Alpha sesuai konfigurasi.
             </div>
           </div>
-        </Card>{" "}
+        </Card>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Edit Attendance</SheetTitle>
+            <SheetDescription>
+              {`Ubah status kehadiran pada tanggal ${dailyAttendance?.date}`}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="grid flex-1 auto-rows-min gap-6 px-4">
+            <div className="grid gap-3">
+              <Label>Status Kehadiran</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="present">Hadir</SelectItem>
+                  <SelectItem value="late">Terlambat</SelectItem>
+                  <SelectItem value="sick">Sakit</SelectItem>
+                  <SelectItem value="leave">Izin/Cuti</SelectItem>
+                  <SelectItem value="alpha">Alpha</SelectItem>
+                  <SelectItem value="overtime">Lembur</SelectItem>
+                  <SelectItem value="off">Libur</SelectItem>
+                  <SelectItem value="nodata">Tidak Ada Data</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {status === "overtime" && (
+              <div className="grid gap-3">
+                <Label>Jumlah Jam Lembur</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={overtimeHours}
+                  onChange={(e) => setOvertimeHours(Number(e.target.value))}
+                />
+              </div>
+            )}
+          </div>
+
+          <SheetFooter>
+            <SheetClose asChild>
+              <Button
+                type="button"
+                onClick={() => {
+                  mutate({
+                    id: dailyAttendance?.id || 0,
+                    payload: {
+                      status,
+                      overtime_hours:
+                        status === "overtime" ? overtimeHours : undefined,
+                    },
+                  });
+                }}
+              >
+                Simpan
+              </Button>
+            </SheetClose>
+            <SheetClose asChild>
+              <Button variant="outline">Tutup</Button>
+            </SheetClose>
+          </SheetFooter>
+        </SheetContent>
       </Sheet>
     </div>
   );
@@ -259,72 +371,6 @@ function Legend() {
           <span>{it.label}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-function MonthPicker({
-  year,
-  month,
-  onChange,
-}: {
-  year: number;
-  month: number;
-  onChange: (y: number, m: number) => void;
-}) {
-  const months = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-  ];
-
-  const years = Array.from(
-    { length: 6 },
-    (_, i) => new Date().getFullYear() - 3 + i,
-  );
-
-  return (
-    <div className="flex items-center gap-2">
-      <Select
-        value={month.toString()}
-        onValueChange={(val) => onChange(year, Number(val))}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Pilih bulan" />
-        </SelectTrigger>
-        <SelectContent>
-          {months.map((m, i) => (
-            <SelectItem key={m} value={i.toString()}>
-              {m}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={year.toString()}
-        onValueChange={(val) => onChange(Number(val), month)}
-      >
-        <SelectTrigger className="w-[100px]">
-          <SelectValue placeholder="Pilih tahun" />
-        </SelectTrigger>
-        <SelectContent>
-          {years.map((y) => (
-            <SelectItem key={y} value={y.toString()}>
-              {y}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
     </div>
   );
 }

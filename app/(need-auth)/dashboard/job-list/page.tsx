@@ -104,7 +104,6 @@ export default function JobListPage() {
             <Button
               onClick={() => {
                 setCurrentPage(1);
-                refetch();
                 setSearch("");
               }}
             >

@@ -1,4 +1,5 @@
 "use client";
+import ModalAddUser from "@/components/setting/ModalAddUser";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -9,6 +10,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -17,17 +28,54 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getAllUsers } from "@/services/api/setting";
+import { deleteUser, getAllUsers, UpdateUserDto } from "@/services/api/setting";
 import { IconDotsVertical } from "@tabler/icons-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import Loading from "@/components/Loading";
+import { useState } from "react";
+import ModalEditUser from "@/components/setting/ModalEditUser";
+
 export default function SettingPage() {
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const [openDialogDelete, setOpenDialogDelete] = useState(false);
+  const [openDialogEdit, setOpenDialogEdit] = useState(false);
+  const [editTargetId, setEditTargetId] = useState<number | null>(null);
+  const [editData, setEditData] = useState<UpdateUserDto | null>(null);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["get-users"],
     queryFn: getAllUsers,
   });
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteUser(id),
+    onSuccess: () => {
+      toast.success("Data berhasil dihapus");
 
+      refetch();
+    },
+    onError: (err: unknown) => {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Gagal menghapus data");
+      }
+    },
+  });
+  if (deleteMutation.isPending) {
+    return <Loading />;
+  }
+  console.log(data);
   return (
     <div className="p-5 space-y-5">
+      {editData && (
+        <ModalEditUser
+          id={editTargetId || 0}
+          data={editData}
+          openDialogEdit={openDialogEdit}
+          onOpenChange={setOpenDialogEdit}
+        />
+      )}
       <h1 className="text-2xl font-bold">Setting</h1>
       <Tabs defaultValue="account" className="">
         <TabsList>
@@ -37,7 +85,7 @@ export default function SettingPage() {
         <TabsContent value="account">
           <Card className="p-5  mt-5">
             <div className="gap-5 flex justify-end">
-              <Button className="">+ Tambah User</Button>
+              <ModalAddUser></ModalAddUser>
             </div>
             <Table>
               <TableHeader className="bg-muted">
@@ -52,7 +100,7 @@ export default function SettingPage() {
               </TableHeader>
               <TableBody>
                 {data?.map((item) => (
-                  <TableRow key={item.name}>
+                  <TableRow key={item.id}>
                     <TableCell className="font-medium">
                       {item.username}
                     </TableCell>
@@ -73,9 +121,27 @@ export default function SettingPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-32">
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setTimeout(() => {
+                                setOpenDialogEdit(true);
+                                setEditTargetId(+item.id);
+                                setEditData(item);
+                              }, 50);
+                            }}
+                          >
+                            Edit
+                          </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-500">
+                          <DropdownMenuItem
+                            className="text-red-500"
+                            onClick={() => {
+                              setTimeout(() => {
+                                setOpenDialogDelete(true);
+                                setDeleteTargetId(item.id);
+                              }, 50);
+                            }}
+                          >
                             Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -89,6 +155,30 @@ export default function SettingPage() {
         </TabsContent>
         <TabsContent value="password">Change your password here.</TabsContent>
       </Tabs>
+      <AlertDialog open={openDialogDelete} onOpenChange={setOpenDialogDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteTargetId !== null) {
+                  deleteMutation.mutate(deleteTargetId);
+                }
+                setDeleteTargetId(null);
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

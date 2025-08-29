@@ -9,7 +9,6 @@ import {
   IconFileAi,
   IconFileDescription,
   IconFolder,
-  IconInnerShadowTop,
   IconListDetails,
   IconReport,
   IconSettings,
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/services/api/auth";
+import Image from "next/image";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
@@ -162,7 +162,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <a href="#">
-                <IconInnerShadowTop className="!size-5" />
+                <Image
+                  src="/logo-khalil.png"
+                  alt="Logo"
+                  width={32}
+                  height={32}
+                />
                 <span className="text-base font-semibold">
                   Khalil Jaya Teknik
                 </span>

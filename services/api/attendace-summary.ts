@@ -27,7 +27,10 @@ export interface AttendanceRespponsetDto {
   month: number;
   employees: EmployeeDto[];
 }
-
+export type AttendanceUpdateDto = {
+  status: string;
+  overtime_hours?: number; // <- optional, bisa kosong
+};
 export async function getAllAttendances(params?: {
   month?: number;
   year?: number;
@@ -51,10 +54,7 @@ export async function createDailyJob(payload: AttendanceRespponsetDto) {
   return data;
 }
 
-export async function updateDailyJob(
-  id: number,
-  payload: AttendanceRespponsetDto
-) {
+export async function updateDailyJob(id: number, payload: AttendanceUpdateDto) {
   const { data } = await axiosInstance.patch(`/attendances/${id}`, payload);
   return data;
 }

@@ -13,7 +13,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -22,16 +24,12 @@ import { useQuery } from "@tanstack/react-query";
 import { getAllDailyJobs } from "@/services/api/daily-job";
 
 export default function DailyJobPage() {
-  const [filter, setFilter] = useState({
-    search: "",
-    status: "",
-    month: "",
-    year: "",
-  });
+  const [month, setMonth] = useState<number | undefined>();
+  const [year, setYear] = useState<number | undefined>();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["daily-jobs", filter],
-    queryFn: ({ queryKey }) => getAllDailyJobs(),
+    queryKey: ["daily-jobs"],
+    queryFn: () => getAllDailyJobs(month, year),
   });
 
   return (
@@ -46,28 +44,69 @@ export default function DailyJobPage() {
             })()}
         </h1>
         <div className="flex gap-4">
-          <Select>
+          <Select
+            value={month?.toString()}
+            onValueChange={(value) => setMonth(Number(value))}
+          >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Theme" />
+              <SelectValue placeholder="Pilih Bulan" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="light">Light</SelectItem>
-              <SelectItem value="dark">Dark</SelectItem>
-              <SelectItem value="system">System</SelectItem>
+              <SelectGroup>
+                <SelectLabel>Bulan</SelectLabel>
+                <SelectItem value="1">Januari</SelectItem>
+                <SelectItem value="2">Februari</SelectItem>
+                <SelectItem value="3">Maret</SelectItem>
+                <SelectItem value="4">April</SelectItem>
+                <SelectItem value="5">Mei</SelectItem>
+                <SelectItem value="6">Juni</SelectItem>
+                <SelectItem value="7">Juli</SelectItem>
+                <SelectItem value="8">Agustus</SelectItem>
+                <SelectItem value="9">September</SelectItem>
+                <SelectItem value="10">Oktober</SelectItem>
+                <SelectItem value="11">November</SelectItem>
+                <SelectItem value="12">Desember</SelectItem>
+              </SelectGroup>
             </SelectContent>
           </Select>
-          <Select>
+
+          <Select
+            value={year?.toString()}
+            onValueChange={(value) => setYear(Number(value))}
+          >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Theme" />
+              <SelectValue placeholder="Pilih Tahun" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="light">Light</SelectItem>
-              <SelectItem value="dark">Dark</SelectItem>
-              <SelectItem value="system">System</SelectItem>
+              <SelectGroup>
+                <SelectLabel>Tahun</SelectLabel>
+                {[2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                  <SelectItem key={y} value={y.toString()}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
-          <Button>Apply Filter</Button>
-          <Button variant="outline"> Ke Bulan Ini</Button>
+          <Button
+            onClick={() => {
+              refetch();
+            }}
+          >
+            Apply Filter
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setMonth(undefined);
+              setYear(undefined);
+              setTimeout(() => {
+                refetch(); // ini akan jalan setelah state punya waktu update
+              }, 100); // bisa pakai 0 atau 10–50ms jika masih belum cukup
+            }}
+          >
+            Ke Bulan Ini
+          </Button>
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4">

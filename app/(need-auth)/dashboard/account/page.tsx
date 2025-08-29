@@ -75,7 +75,7 @@ export default function ProfilePage() {
     };
   }, []);
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["get-users"],
+    queryKey: ["get-my-users"],
     queryFn: getProfile,
   });
 
@@ -182,10 +182,9 @@ export default function ProfilePage() {
       <Tabs defaultValue="profile">
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
+          {/* <TabsTrigger value="password">Password</TabsTrigger> */}
         </TabsList>
 
-        {/* PROFILE */}
         <TabsContent value="profile" className="mt-4">
           <Card className="p-4 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

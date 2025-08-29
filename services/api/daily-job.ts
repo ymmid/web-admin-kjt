@@ -22,11 +22,17 @@ export type DailyJobItem = {
 
 export type DailyJobDataArray = DailyJobData[];
 
-export async function getAllDailyJobs(params?: {
-  month?: number;
-  year?: number;
-}): Promise<DailyJobDataArray> {
-  const { data } = await axiosInstance.get("/daily-job", { params });
+export async function getAllDailyJobs(
+  month?: number,
+  year?: number
+): Promise<DailyJobDataArray> {
+  const { data } = await axiosInstance.get("/daily-job", {
+    params: {
+      month: month || undefined,
+      year: year || undefined,
+    },
+  });
+
   return data;
 }
 
