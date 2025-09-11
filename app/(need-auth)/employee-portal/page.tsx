@@ -22,8 +22,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { CheckCircle2, Lock, LogIn, LogOut, Plus } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getProfileEmployee } from "@/services/api/employee-portal";
+import { createDailyJob } from "@/services/api/daily-job";
+import { toast } from "sonner";
+import {
+  AttendanceUpdateDto,
+  updateDailyJob,
+} from "@/services/api/attendace-summary";
 
 function fmtDateHeader(d: Date) {
   const id = new Intl.DateTimeFormat("id-ID", {
@@ -122,7 +128,6 @@ export default function PortalPage() {
   const [otMinutes, setOtMinutes] = useState<string>("30");
   const [otDesc, setOtDesc] = useState("");
 
-  // ==== Actions (mock) ====
   function handleCheckIn() {
     if (isCheckedIn) return;
     setAttendance((a) => ({ ...a, checkInAt: new Date().toISOString() }));
@@ -131,48 +136,57 @@ export default function PortalPage() {
     if (!isCheckedIn || isCheckedOut) return;
     setAttendance((a) => ({ ...a, checkOutAt: new Date().toISOString() }));
   }
-  function handleAddActivity() {
-    const qtyNum = actQty ? Math.max(0, Number(actQty)) : undefined;
-    if (!actDesc || actDesc.trim().length < 3) return;
-    const item: ActivityItem = {
-      id: uid(),
-      date: todayStr,
-      category: actCategory,
-      description: actDesc.trim(),
-      qty: isNaN(Number(qtyNum)) ? undefined : qtyNum,
-      attachments: 0,
-      createdAt: new Date().toISOString(),
-    };
-    setActivities((arr) => [item, ...arr]);
-    // reset & close
-    setActDesc("");
-    setActQty("");
-    setActCategory("QC");
+
+  const { mutate, isSuccess } = useMutation({
+    mutationFn: createDailyJob,
+    onSuccess: () => {
+      toast.success("Pekerjaan harian berhasil disimpan!");
+      refetch();
+    },
+    onError: () => {
+      toast.error("Gagal menyimpan pekerjaan harian. Silakan coba lagi.");
+    },
+  });
+
+  const handleCreateJob = () => {
+    mutate({
+      job_description: actDesc,
+      job_date: new Date().toISOString(),
+
+      employee_id: data?.employee?.id || 0,
+    });
     setOpenAddWork(false);
-  }
-  function handleAddOvertime() {
-    const h = Math.max(0, Number(otHours) || 0);
-    const m = Math.max(0, Number(otMinutes) || 0);
-    const total = h * 60 + m;
-    if (total < 15) return; // minimal 15 menit
-    const item: OvertimeItem = {
-      id: uid(),
-      date: todayStr,
-      durationMinutes: total,
-      description: otDesc.trim() || undefined,
-      createdAt: new Date().toISOString(),
-    };
-    setOvertimes((arr) => [item, ...arr]);
-    setAttendance((a) => ({
-      ...a,
-      overtimeMinutes: a.overtimeMinutes + total,
-    }));
-    // reset & close
-    setOtHours("0");
-    setOtMinutes("30");
-    setOtDesc("");
-    setOpenOT(false);
-  }
+  };
+  type UpdateDailyJobArg = {
+    id: number;
+    payload: AttendanceUpdateDto;
+  };
+
+  const { mutate: createOT } = useMutation<unknown, unknown, UpdateDailyJobArg>(
+    {
+      mutationFn: ({ id, payload }) => updateDailyJob(id, payload),
+      onSuccess: () => {
+        toast.success("Update berhasil!");
+        setOpenOT(false);
+        refetch();
+      },
+      onError: () => {
+        toast.error("Gagal update data!");
+      },
+    },
+  );
+
+  const handleCreateOverTime = () => {
+    console.log(Number(otHours) + Number(otMinutes) / 60);
+    createOT({
+      id: data?.attendanceSummary?.id || 0,
+      payload: {
+        status: "overtime",
+        overtime_hours: Number(otHours) + Number(otMinutes) / 60,
+        note_overtime: otDesc,
+      },
+    });
+  };
 
   return (
     <div className="p-5 space-y-6">
@@ -189,9 +203,7 @@ export default function PortalPage() {
               <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-1">
-              <div className="text-lg font-semibold">
-                {data?.employee?.name}
-              </div>
+              <div className="text-lg font-semibold">{data?.user?.name}</div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   {data?.dailyAttendances?.time_in ? (
@@ -311,7 +323,7 @@ export default function PortalPage() {
                 </div>
                 <DialogFooter>
                   <Button
-                    onClick={handleAddActivity}
+                    onClick={handleCreateJob}
                     disabled={actDesc.trim().length < 3}
                   >
                     Simpan
@@ -372,33 +384,33 @@ export default function PortalPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddOvertime}>Simpan</Button>
+                  <Button onClick={handleCreateOverTime}>Simpan</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
         </div>
 
-        {activities.length === 0 ? (
+        {data?.dailyJob?.length === 0 ? (
           <div className="text-sm text-muted-foreground">
             Belum ada kegiatan untuk hari ini.
           </div>
         ) : (
           <div className="grid gap-3">
-            {activities.map((a) => (
+            {data?.dailyJob?.map((a) => (
               <Card key={a.id} className="p-3">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">Pekerjaan harian</Badge>
                     <span className="text-xs text-muted-foreground">
                       dibuat{" "}
-                      {new Date(a.createdAt).toLocaleTimeString("id-ID", {
+                      {new Date(a.job_date).toLocaleTimeString("id-ID", {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
                     </span>
                   </div>
-                  <div className="text-sm">{a.description}</div>
+                  <div className="text-sm">{a.job_description}</div>
                 </div>
               </Card>
             ))}
@@ -413,31 +425,35 @@ export default function PortalPage() {
             Total: <b>{fmtMinutes(attendance.overtimeMinutes)}</b>
           </div>
         </div>
-        {overtimes.length === 0 ? (
+        {data?.attendanceSummary?.overtime_hours == null ? (
           <div className="text-sm text-muted-foreground">
             Belum ada entri lembur.
           </div>
         ) : (
           <div className="grid gap-3">
-            {overtimes.map((o) => (
-              <Card key={o.id} className="p-3">
-                <div className="flex flex-col gap-1">
-                  <div className="text-sm">
-                    Lembur: <b>{fmtMinutes(o.durationMinutes)}</b>
-                  </div>
-                  {o.description ? (
-                    <div className="text-sm">{o.description}</div>
-                  ) : null}
-                  <div className="text-xs text-muted-foreground">
-                    dibuat{" "}
-                    {new Date(o.createdAt).toLocaleTimeString("id-ID", {
+            <Card className="px-3">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">Data Lembur</Badge>
+                  <span className="text-xs text-muted-foreground">
+                    dibuat
+                    {new Date(
+                      data?.attendanceSummary?.updated_at,
+                    ).toLocaleTimeString("id-ID", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
-                  </div>
+                  </span>
                 </div>
-              </Card>
-            ))}
+                <div className="text-sm">
+                  {" "}
+                  Total Lembur : {data?.attendanceSummary?.overtime_hours} Jam
+                </div>
+                <div className="text-sm">
+                  {data?.attendanceSummary?.note_overtime}
+                </div>
+              </div>
+            </Card>
           </div>
         )}
       </Card>

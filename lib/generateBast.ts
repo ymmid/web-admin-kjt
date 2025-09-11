@@ -563,7 +563,7 @@ export function generateBeritaAcaraFE(form: BeritaAcaraForm) {
     const objectUrl = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = objectUrl;
-    anchor.download = "berita-acara.docx";
+    anchor.download = form.bastNo + "-bast.docx";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();

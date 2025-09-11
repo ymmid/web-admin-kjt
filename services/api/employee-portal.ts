@@ -52,12 +52,25 @@ export interface DailyJob {
   deleted_at: string | null;
 }
 
+export type AttendanceSummary = {
+  id: number;
+  employee_id: number;
+  attendance_date: string; // ISO string (Date)
+  status: string; // misal: 'present', 'absent', dst.
+  overtime_hours: string; // desimal dalam string (misal: "2.5")
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  note_overtime: string | null;
+};
+
 // Main API Response
 export interface EmployeePortalResponse {
   user: User;
   employee: Employee;
   dailyAttendances: DailyAttendance | null;
   dailyJob: DailyJob[];
+  attendanceSummary: AttendanceSummary;
 }
 
 export async function loginUser(payload: { email: string; password: string }) {

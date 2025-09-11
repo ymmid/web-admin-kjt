@@ -70,6 +70,24 @@ export default function AttendancePage() {
     queryKey: ["attendances-summary"],
     queryFn: () => getAllAttendances({ month, year }),
   });
+  const workMonth: number = data?.month || 0;
+  const workYear: number = data?.year || 0;
+  function countNonSundayDays(workYear: number, workMonth: number) {
+    let count = 0;
+
+    const date = new Date(workYear, workMonth - 1, 1);
+
+    while (date.getMonth() === workMonth - 1) {
+      // 0 = Minggu, 1 = Senin, dst.
+      if (date.getDay() !== 0) {
+        count++;
+      }
+      date.setDate(date.getDate() + 1);
+    }
+
+    return count;
+  }
+  const workDay = countNonSundayDays(workYear, workMonth);
   const { mutate, isPending } = useMutation({
     mutationFn: ({
       id,
@@ -187,7 +205,8 @@ export default function AttendancePage() {
                         {employee.employee_name}
                       </div>
                       <div className="text-xs text-gray-500">
-                        Rate Harian: {formatRupiah(+employee.salary)}
+                        Rate Perbulan : {formatRupiah(+employee.salary)} <br />
+                        Rate Harian: {formatRupiah(+employee.salary / workDay)}
                       </div>
                     </td>
                     {employee?.daily_status.map((day) => {
@@ -244,6 +263,11 @@ export default function AttendancePage() {
                 const totalLate = employee.daily_status.filter(
                   (item) => item.status === Status.Late,
                 ).length;
+                const totalOverTime = employee.daily_status.reduce(
+                  (total, item) => total + (Number(item.overtime_hours) || 0),
+                  0,
+                );
+
                 return (
                   <tr key={`sum-${employee.employee_id}`}>
                     <td className="pt-2">
@@ -254,7 +278,10 @@ export default function AttendancePage() {
                     <td colSpan={employee.daily_status.length} className="pt-2">
                       <div className="flex flex-wrap items-center gap-6 text-sm">
                         <span className="font-semibold">
-                          {formatRupiah(Math.round(+employee?.salary))}
+                          {formatRupiah(
+                            (+employee?.salary / workDay / 8) * totalOverTime +
+                              (+employee?.salary / workDay) * totalPresent,
+                          )}
                         </span>
                         <span>Hadir: {totalPresent}</span>
                         <span>Terlambat: {totalLate}</span>
@@ -264,7 +291,12 @@ export default function AttendancePage() {
                         <span>Alpha: {totalAlpha}</span>
                         <span>Off: {totalOff}</span>
                         <span>Data kosong: {totalNoData}</span>
-                        <span>lembur: 8 jam , Total : Rp 300.000 </span>
+                        <span>
+                          lembur : {totalOverTime} jam , Total :
+                          {formatRupiah(
+                            (+employee?.salary / workDay / 8) * totalOverTime,
+                          )}
+                        </span>
                       </div>
                     </td>
                   </tr>
@@ -275,7 +307,7 @@ export default function AttendancePage() {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
               Total Gaji Semua Karyawan:
-              <span className="font-semibold ">Rp 5.000.000</span>
+              <span className="font-semibold ">Rp -</span>
             </div>
             <div className="text-xs text-gray-500">
               *Simulasi kebijakan: Telat dipotong 10%, Sakit dibayar penuh,

@@ -28,8 +28,10 @@ export interface AttendanceRespponsetDto {
   employees: EmployeeDto[];
 }
 export type AttendanceUpdateDto = {
-  status: string;
-  overtime_hours?: number; // <- optional, bisa kosong
+  status?: string;
+  overtime_hours?: number;
+  note_overtime?: string;
+  // <- optional, bisa kosong
 };
 export async function getAllAttendances(params?: {
   month?: number;

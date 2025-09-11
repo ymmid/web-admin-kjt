@@ -15,8 +15,12 @@ import {
   SelectValue,
 } from "../ui/select";
 import { useQuery } from "@tanstack/react-query";
-import { getLastNumberByScope } from "@/services/api/create-work-permit";
+import {
+  generateNewNumber,
+  getLastNumberByScope,
+} from "@/services/api/create-work-permit";
 import { generateBeritaAcaraFE } from "@/lib/generateBast";
+import { toast } from "sonner";
 
 const BeritaAcaraForm = () => {
   const [form, setForm] = useState({
@@ -80,8 +84,13 @@ const BeritaAcaraForm = () => {
       items: [...prev.items, { deskripsi: "", qty: "", harga: "" }],
     }));
   };
-  const handleGenerateBast = () => {
-    generateBeritaAcaraFE(form);
+  const handleGenerateBast = async () => {
+    try {
+      generateBeritaAcaraFE(form);
+      await generateNewNumber("bast");
+    } catch (error) {
+      toast.error("Terjadi kesalahan");
+    }
   };
   return (
     <Card className="w-full mt-5 h-full shadow-lg border">

@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { getIncomeOutcome3Month } from "@/services/api/dashboard";
+import { useQuery } from "@tanstack/react-query";
 
 export const description = "An interactive area chart";
 
@@ -140,6 +142,50 @@ const chartConfig = {
 export function ChartAreaInteractive() {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState("90d");
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["income-outcome-3-month"],
+    queryFn: getIncomeOutcome3Month,
+  });
+
+  const chartData = React.useMemo(() => {
+    if (!data) return [];
+    type ChartRow = {
+      date: string;
+      desktop: number;
+      mobile: number;
+    };
+
+    // Pakai type annotation di sini (bukan di = {})
+    const groupedData: { [key: string]: ChartRow } = {};
+
+    data.forEach((transaction) => {
+      // Ambil tanggal tanpa jam
+      const date = transaction.transaction_date.split("T")[0];
+
+      if (!groupedData[date]) {
+        groupedData[date] = {
+          date: date,
+          desktop: 0,
+          mobile: 0,
+        };
+      }
+
+      const amount = Number(transaction.amount);
+
+      if (transaction.flow_type === "income") {
+        groupedData[date].desktop += amount;
+      } else if (transaction.flow_type === "expense") {
+        groupedData[date].mobile += amount;
+      }
+    });
+    console.log(data);
+    return Object.values(groupedData).sort((a, b) =>
+      a.date.localeCompare(b.date),
+    );
+  }, [data]);
+  React.useEffect(() => {
+    console.log("DATA TERISI/UPDATE:", data);
+  }, [data]);
 
   React.useEffect(() => {
     if (isMobile) {
