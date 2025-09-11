@@ -28,7 +28,8 @@ export default function LoginPage() {
       });
       const role = data.role;
 
-      if (role === "admin") {
+      if (role == "admin") {
+        console.log(role);
         router.push("/dashboard");
       } else if (role === "employee" || role === "karyawan") {
         router.push("/employee-portal");
