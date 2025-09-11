@@ -43,11 +43,7 @@ export default function LoginPage() {
       // notif error, alert(error.message);
     },
   });
-  useEffect(() => {
-    if (data?.role === "admin") {
-      router.push("/dashboard");
-    }
-  }, [data]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({
       ...prev,
