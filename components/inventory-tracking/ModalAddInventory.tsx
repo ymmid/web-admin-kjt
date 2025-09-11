@@ -24,7 +24,6 @@ import {
 import {
   createInventoryTracking,
   getAllInventoryTracking,
-  InventoryTracking,
 } from "@/services/api/inventory-tracking";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -77,11 +76,9 @@ export default function AddInventoryDialog() {
       }
     },
   });
-  const { data, isLoading, isError, error, refetch } = useQuery<
-    InventoryTracking[]
-  >({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["inventory-tracking"],
-    queryFn: getAllInventoryTracking,
+    queryFn: () => getAllInventoryTracking(),
   });
   function handleSubmit() {
     const payload = {
