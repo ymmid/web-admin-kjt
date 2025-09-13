@@ -34,6 +34,9 @@ export default function LoginPage() {
       } else if (role === "employee" || role === "karyawan") {
         router.push("/employee-portal");
       }
+      toast.success("login berhasil", {
+        description: data.message,
+      });
     },
     onError: (error) => {
       toast.error("login Gagal", {
