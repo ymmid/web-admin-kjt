@@ -96,7 +96,7 @@ const BeritaAcaraForm = () => {
     <Card className="w-full mt-5 h-full shadow-lg border">
       <CardHeader />
       <div className="text-center font-semibold text-2xl">Berita Acara</div>
-      <div className="flex gap-5 justify-end px-5">
+      <div className="flex flex-col gap-3 px-5 md:flex-row md:gap-5 md:justify-end">
         <Button onClick={() => handleGenerateNoBast()}>
           Generate No Invoice
         </Button>
@@ -114,6 +114,7 @@ const BeritaAcaraForm = () => {
           </SelectContent>
         </Select>
       </div>
+
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>

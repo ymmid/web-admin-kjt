@@ -34,21 +34,21 @@ export default function DailyJobPage() {
 
   return (
     <div className="min-h-screen px-4 py-8">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-bold mb-4">
-          Laporan Harian Pekerjaan •{" "}
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
+        <h1 className="text-2xl font-bold mb-2 md:mb-0">
+          Laporan Harian Pekerjaan •
           {data?.[0] &&
             (() => {
               const [year, month] = data[0].date.split("-");
               return ` ${month}-${year}`;
             })()}
         </h1>
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-2 md:flex-row md:gap-4 mb-5">
           <Select
             value={month?.toString()}
             onValueChange={(value) => setMonth(Number(value))}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Pilih Bulan" />
             </SelectTrigger>
             <SelectContent>
@@ -69,12 +69,11 @@ export default function DailyJobPage() {
               </SelectGroup>
             </SelectContent>
           </Select>
-
           <Select
             value={year?.toString()}
             onValueChange={(value) => setYear(Number(value))}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Pilih Tahun" />
             </SelectTrigger>
             <SelectContent>
@@ -92,6 +91,7 @@ export default function DailyJobPage() {
             onClick={() => {
               refetch();
             }}
+            className="w-full md:w-auto"
           >
             Apply Filter
           </Button>
@@ -101,14 +101,16 @@ export default function DailyJobPage() {
               setMonth(undefined);
               setYear(undefined);
               setTimeout(() => {
-                refetch(); // ini akan jalan setelah state punya waktu update
-              }, 100); // bisa pakai 0 atau 10–50ms jika masih belum cukup
+                refetch();
+              }, 100);
             }}
+            className="w-full md:w-auto"
           >
             Ke Bulan Ini
           </Button>
         </div>
       </div>
+
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4">
         {data?.map((items) => {
           return (

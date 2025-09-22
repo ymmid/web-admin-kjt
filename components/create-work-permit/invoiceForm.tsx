@@ -115,7 +115,7 @@ const InvoiceForm = () => {
     <Card className="w-full mt-5 h-full shadow-lg border ">
       <CardHeader />
       <div className="text-center font-semibold text-2xl">Invoice</div>
-      <div className="flex gap-5 justify-end px-5">
+      <div className="flex flex-col gap-3 px-5 md:flex-row md:gap-5 md:justify-end">
         <div className="flex items-center space-x-2">
           <Checkbox
             id="includePpn"
@@ -132,7 +132,7 @@ const InvoiceForm = () => {
           Generate No Invoice
         </Button>
         <Select>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Pilih Template" />
           </SelectTrigger>
           <SelectContent>
@@ -145,6 +145,7 @@ const InvoiceForm = () => {
           </SelectContent>
         </Select>
       </div>
+
       <CardContent className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Nama Perusahaan */}

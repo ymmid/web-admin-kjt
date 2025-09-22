@@ -108,16 +108,16 @@ export default function AttendancePage() {
   return (
     <div className="p-5 space-y-5">
       <Sheet>
-        <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <h1 className="text-2xl font-bold">
             Data Absensi Kehadiran Karyawan {data?.month}-{data?.year}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2">
             <Select
               value={month?.toString()}
               onValueChange={(value) => setMonth(Number(value))}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Pilih Bulan" />
               </SelectTrigger>
               <SelectContent>
@@ -143,7 +143,7 @@ export default function AttendancePage() {
               value={year?.toString()}
               onValueChange={(value) => setYear(Number(value))}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Pilih Tahun" />
               </SelectTrigger>
               <SelectContent>
@@ -157,10 +157,12 @@ export default function AttendancePage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
+
             <Button
               onClick={() => {
                 refetch();
               }}
+              className="w-full md:w-auto"
             >
               Apply Filter
             </Button>
@@ -170,14 +172,16 @@ export default function AttendancePage() {
                 setMonth(undefined);
                 setYear(undefined);
                 setTimeout(() => {
-                  refetch(); // ini akan jalan setelah state punya waktu update
-                }, 100); // bisa pakai 0 atau 10–50ms jika masih belum cukup
+                  refetch();
+                }, 100);
               }}
+              className="w-full md:w-auto"
             >
               Ke Bulan Ini
             </Button>
           </div>
         </div>
+
         <Card className="p-4">
           <Legend />
           <div className="mt-4 overflow-x-auto">
