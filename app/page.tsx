@@ -23,9 +23,6 @@ export default function LoginPage() {
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
-      toast.success("login berhasil", {
-        description: data.message,
-      });
       const role = data.role;
 
       if (role == "admin") {
@@ -42,8 +39,6 @@ export default function LoginPage() {
       toast.error("login Gagal", {
         description: error.message,
       });
-
-      // notif error, alert(error.message);
     },
   });
 
