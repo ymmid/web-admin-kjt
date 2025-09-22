@@ -193,7 +193,7 @@ export default function MoneyTrakingPage() {
       </div>
 
       <Card className="p-5  mt-5">
-        <div className="gap-5 flex justify-end">
+        <div className="gap-5 flex flex-wrap justify-end">
           <Button className=" ">Export To Exel</Button>
 
           <AddMoneyTracking></AddMoneyTracking>

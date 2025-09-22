@@ -188,12 +188,13 @@ export default function InventoryTrackingPage() {
       <h1 className="text-2xl font-bold">
         Data Pembelian Dan Penjualan Barang
       </h1>
-      <div className="flex gap-3 mt-5">
+      <div className="flex flex-col gap-3 mt-5 md:flex-row md:items-center md:gap-3">
         <Input
           type="search"
           placeholder="Search..."
           value={tempSearch}
           onChange={(e) => setTempSearch(e.target.value)}
+          className="w-full md:w-auto"
         />
 
         <Button
@@ -201,6 +202,7 @@ export default function InventoryTrackingPage() {
             setSearch(tempSearch);
             refetch();
           }}
+          className="w-full md:w-auto"
         >
           <FiSearch size={20} />
         </Button>
@@ -209,7 +211,7 @@ export default function InventoryTrackingPage() {
           value={month?.toString()}
           onValueChange={(value) => setMonth(Number(value))}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Pilih Bulan" />
           </SelectTrigger>
           <SelectContent>
@@ -235,7 +237,7 @@ export default function InventoryTrackingPage() {
           value={year?.toString()}
           onValueChange={(value) => setYear(Number(value))}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Pilih Tahun" />
           </SelectTrigger>
           <SelectContent>
@@ -256,12 +258,14 @@ export default function InventoryTrackingPage() {
             refetch();
             setSearch("");
           }}
+          className="w-full md:w-auto"
         >
           Apply Filter
         </Button>
       </div>
+
       <Card className="p-5  mt-5">
-        <div className="gap-5 flex justify-end">
+        <div className="gap-5 flex flex-wrap justify-end">
           <Button onClick={handleExportToExcel}>Export To Excel</Button>
 
           <ModalAddInventory />

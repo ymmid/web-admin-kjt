@@ -79,7 +79,7 @@ export default function TableDataJobList() {
       <Card className="p-5 ">
         <div className="flex flex-col md:flex-row md:justify-between gap-2">
           <div className="font-bold text-2xl">Tabel Data Pekerjaan</div>
-          <div className="flex gap-2 items-center justify-end">
+          <div className="flex gap-2 flex-wrap items-center justify-end">
             <Button variant="outline">Export Excel</Button>
             <ModalAddJobList />
           </div>
