@@ -298,16 +298,6 @@ const InvoiceForm = () => {
               + Tambah Item
             </Button>
           </div>
-
-          <div className="md:col-span-2">
-            <label className="block mb-1 font-medium">Total Terbilang</label>
-            <Input
-              name="terbilang"
-              placeholder="Contoh: Lima Belas Juta Rupiah"
-              onChange={handleChange}
-              value={form.terbilang}
-            />
-          </div>
         </div>
 
         <div className="text-center mt-8">

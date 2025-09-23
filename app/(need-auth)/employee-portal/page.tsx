@@ -128,15 +128,6 @@ export default function PortalPage() {
   const [otMinutes, setOtMinutes] = useState<string>("30");
   const [otDesc, setOtDesc] = useState("");
 
-  function handleCheckIn() {
-    if (isCheckedIn) return;
-    setAttendance((a) => ({ ...a, checkInAt: new Date().toISOString() }));
-  }
-  function handleCheckOut() {
-    if (!isCheckedIn || isCheckedOut) return;
-    setAttendance((a) => ({ ...a, checkOutAt: new Date().toISOString() }));
-  }
-
   const { mutate, isSuccess } = useMutation({
     mutationFn: createDailyJob,
     onSuccess: () => {
@@ -200,7 +191,7 @@ export default function PortalPage() {
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
               <AvatarImage alt={data?.employee?.photo_url || ""} src="" />
-              <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>{name?.slice(0, 1).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="space-y-1">
               <div className="text-lg font-semibold">{data?.user?.name}</div>
@@ -307,8 +298,8 @@ export default function PortalPage() {
                 <DialogHeader>
                   <DialogTitle>Tambah Pekerjaan</DialogTitle>
                   <DialogDescription>
-                    Catat pekerjaan untuk tanggal <b>{todayStr}</b>. (Tanpa jam
-                    per item)
+                    Catat pekerjaan untuk tanggal <b>{fmtDateHeader(today)}</b>.
+                    (Tanpa jam per item)
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4">
@@ -347,7 +338,8 @@ export default function PortalPage() {
                 <DialogHeader>
                   <DialogTitle>Tambah Lembur</DialogTitle>
                   <DialogDescription>
-                    Masukkan durasi lembur untuk tanggal <b>{todayStr}</b>.
+                    Masukkan durasi lembur untuk tanggal{" "}
+                    <b>{fmtDateHeader(today)}</b>.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4">
