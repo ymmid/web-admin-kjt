@@ -114,7 +114,7 @@ export default function DailyJobPage() {
       <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4">
         {data?.map((items) => {
           return (
-            <Card key={items.date} className="border shadow-sm">
+            <Card key={items.date} className="border shadow-sm overflow-x-auto">
               <CardHeader className="py-3">
                 <CardTitle className="text-base font-semibold">
                   {items.date}
