@@ -165,7 +165,7 @@ export default function EmployeeTabs() {
                       setOpenDialogEdit(true);
                       setEditTargetId(+row.original.id);
                       setEditData(row.original);
-                    }, 50);
+                    }, 100);
                   }}
                 >
                   Edit

@@ -26,7 +26,6 @@ export default function LoginPage() {
       const role = data.role;
 
       if (role == "admin") {
-        console.log(role);
         router.push("/dashboard");
       } else if (role === "employee" || role === "karyawan") {
         router.push("/employee-portal");
@@ -51,7 +50,7 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(form);
+
     mutation.mutate(form);
   };
   return (

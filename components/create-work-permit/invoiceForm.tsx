@@ -99,7 +99,7 @@ const InvoiceForm = () => {
   const handlDonwloadPermit = async () => {
     try {
       await generateNewNumber("invoice");
-      console.log(form);
+
       const [year, month, day] = form.tanggal.split("-");
       form.tanggal = `${day} ${getMonthName(Number(month))} ${year}`;
       if (form.includePpn) {

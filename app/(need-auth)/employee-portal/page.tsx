@@ -168,7 +168,6 @@ export default function PortalPage() {
   );
 
   const handleCreateOverTime = () => {
-    console.log(Number(otHours) + Number(otMinutes) / 60);
     createOT({
       id: data?.attendanceSummary?.id || 0,
       payload: {

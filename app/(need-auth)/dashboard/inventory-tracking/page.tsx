@@ -151,7 +151,6 @@ export default function InventoryTrackingPage() {
       },
     });
 
-    console.log(payload);
     setOpen(false);
   }
   const deleteMutation = useMutation({
@@ -175,10 +174,9 @@ export default function InventoryTrackingPage() {
   async function handleExportToExcel() {
     try {
       const allData = await getAllInventoryTrackingNoLimit(month, year);
-      console.log(allData);
+
       exportInventoryToExcel(allData, month, year);
     } catch (error) {
-      console.error(error);
       toast.error("Gagal mengambil semua data!");
     }
   }

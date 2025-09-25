@@ -6,6 +6,5 @@ const axiosInstance = axios.create({
   withCredentials: true,
   timeout: 10000,
 });
-console.log(process.env.NEXT_PUBLIC_API_URL);
 
 export default axiosInstance;

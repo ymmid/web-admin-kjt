@@ -62,7 +62,7 @@ const ModalEditEmployees: React.FC<ModalEditEmployeeProps> = ({
   });
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(form);
+
     const payload = {
       ...form,
       hire_date: new Date(form.hire_date).toISOString(),

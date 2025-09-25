@@ -178,14 +178,12 @@ export function ChartAreaInteractive() {
         groupedData[date].mobile += amount;
       }
     });
-    console.log(data);
+
     return Object.values(groupedData).sort((a, b) =>
       a.date.localeCompare(b.date),
     );
   }, [data]);
-  React.useEffect(() => {
-    console.log("DATA TERISI/UPDATE:", data);
-  }, [data]);
+  React.useEffect(() => {}, [data]);
 
   React.useEffect(() => {
     if (isMobile) {

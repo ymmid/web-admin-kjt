@@ -45,7 +45,6 @@ export default function ModalEditUser(props: ModalEditUserProps) {
 
   useEffect(() => {
     if (props.data) {
-      console.log(props.data);
       setForm({
         name: props.data.name ?? "",
         username: props.data.username ?? "",

@@ -44,9 +44,7 @@ const BeritaAcaraForm = () => {
   };
 
   const isFormComplete = Object.values(form).every((val) => val !== "");
-  const generateDocx = () => {
-    console.log("Data invoice:", form);
-  };
+  const generateDocx = () => {};
   const handleItemChange = (
     index: number,
     field: string,

@@ -88,7 +88,7 @@ export default function AddInventoryDialog() {
       sell_price: parseInt(form.sell_price) || 0,
       bought_at: form.bought_at ? new Date(form.bought_at) : undefined, // ⬅️ konversi di sini
     };
-    console.log(payload);
+
     mutation.mutate(payload);
   }
 

@@ -65,7 +65,7 @@ export default function SettingPage() {
   if (deleteMutation.isPending) {
     return <Loading />;
   }
-  console.log(data);
+
   return (
     <div className="p-5 space-y-5">
       {editData && (

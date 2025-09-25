@@ -62,7 +62,6 @@ const SuratJalanForm = () => {
   const isFormComplete = Object.values(form).every((val) => val !== "");
   const generateDocx = () => {
     // Lakukan generate file DOCX dengan data dari `form`
-    console.log("Data invoice:", form);
     // bisa lempar ke API, atau gunakan docx.js, atau SheetJS dsb
   };
   const handleItemChange = (

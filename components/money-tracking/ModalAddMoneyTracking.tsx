@@ -90,10 +90,6 @@ export default function ModalAddMoneyTracking() {
       formData.append("imageFile", proofFile); // Nama field HARUS sama dengan yang BE expect!
     }
 
-    for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
-    }
-
     mutation.mutate(formData);
   }
 

@@ -41,7 +41,6 @@ export default function AuthLayout({
     if (!isLoading && user && user.role !== "admin") {
       router.push("/employee-portal");
     }
-    console.log("user", user?.role);
   }, [isError, user]);
 
   if (isLoading || refreshMutation.isPending)
